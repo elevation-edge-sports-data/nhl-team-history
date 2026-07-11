@@ -1,6 +1,6 @@
 # NHL Playoff Team Stats
 
-An interactive web application featuring historical NHL team logos, franchise branding, and playoff statistics for every franchise.
+An interactive web application featuring historical NHL team logos, franchise branding, and Stanley Cup Playoff statistics for every franchise.
 
 ## Features
 
