@@ -35,20 +35,22 @@ No build step or backend is required; all content is static and client-side.
 
 ## Project Structure 
 
+```text
 nhl-playoff-team-stats/
-├── index.html # Main landing page with team directory
-├── script.js # Powers interactivity on index and team pages
-├── styles.css # Controls layout, colors, fonts, and responsiveness
-├── logos/     # Historical team logos for each NHL season
+├── index.html             # Main landing page with team directory
+├── script.js              # Powers interactivity on index and team pages
+├── styles.css             # Controls layout, colors, fonts, and responsiveness
+├── logos/                 # Historical team logos for each NHL season
 │   ├── NHL1918/
 │   ├── ...
 │   └── NHL2026/
-├── data.json/ # Team elimination and playoff data
-├── NHLteamcolors.json/ # Team colors for each team
-├── uniqelogos.json/ # Unique logos for each team
-├── .nojekyll/ # No Jekyll File
-├── screenshot.png/ # App screenshot
-└── README.md # This documentation
+├── data.json              # Team elimination and playoff data
+├── NHLteamcolors.json     # Team colors for each team
+├── uniqelogos.json        # Unique logos for each team
+├── .nojekyll              # Disables GitHub Pages Jekyll processing
+├── screenshot.png         # Application screenshot
+└── README.md              # Project documentation
+```
 
 ## License
 
