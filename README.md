@@ -1,15 +1,15 @@
 # NHL Playoff Team Stats
 
-An interactive web app showcasing historical NHL playoff performance at the team level. 
+An interactive web application featuring historical NHL team logos, franchise branding, and playoff statistics for every franchise.
 
 ## Features
 
-- Simple, responsive front-end built with HTML, CSS, and JavaScript  
-- Designed for future expansion and multi-sport support  
-- Covers all 59 NHL franchises (32 current, 27 historical)  
-- Team-specific pages with accurate color schemes and historical logos  
-- Visualizes playoff performance through tables, bar charts, and line graphs  
-- Includes team playoff rank, elimination number, and total playoff wins
+- Interactive web application built with HTML, CSS, and JavaScript
+- Comprehensive collection of season-specific team logos spanning every franchise's NHL history
+- Team-specific pages styled using official franchise colors and branding
+- Covers all 59 NHL franchises, including current and historical teams
+- Visualizes playoff performance through tables, bar charts, and line graphs
+- Includes franchise playoff rankings, elimination numbers, and total playoff win distributions
 
 ## Screenshot
 
@@ -17,21 +17,9 @@ An interactive web app showcasing historical NHL playoff performance at the team
 
 ## Live Demo
 
-The app is deployed via GitHub Pages: 
+View the live application:
 
 https://elevation-edge-sports-data.github.io/nhl-playoff-team-stats/
-
-## Local Usage
-
-To run the app locally:
-
-1. Clone the repository:
-
-git clone https://github.com/elevation-edge-sports-data/nhl-playoff-team-stats.git
-
-2. Open `index.html` in your browser.  
-No build step or backend is required; all content is static and client-side.
-
 
 ## Project Structure 
 
@@ -44,7 +32,7 @@ nhl-playoff-team-stats/
 │   ├── NHL1918/
 │   ├── ...
 │   └── NHL2026/
-├── data.json              # Team elimination and playoff data
+├── data.json              # Franchise playoff statistics
 ├── NHLteamcolors.json     # Team colors for each team
 ├── uniqelogos.json        # Unique logos for each team
 ├── .nojekyll              # Disables GitHub Pages Jekyll processing
@@ -54,6 +42,6 @@ nhl-playoff-team-stats/
 
 ## License
 
-This project is open-source and freely available for personal or educational use.
+Open source project.
 
 Produced by Zach Sajevic (2025)
