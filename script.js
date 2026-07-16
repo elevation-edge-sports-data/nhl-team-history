@@ -512,7 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         position: 'left',
                         title: { display: true, text: 'PTS% / xGF% / CF% (%)' },
                         min: 30,
-                        max: 70,
+                        max: 75,
                         grid: { color: '#eee' }
                     },
                     y1: {
