@@ -1,101 +1,197 @@
 {
 "2026":[
- {
-  "team": "SJS"
- },
- {
-  "team": "CHI"
- },
- {
-  "team": "NSH"
- },
- {
-  "team": "SEA"
- },
- {
-  "team": "ANA"
- },
- {
-  "team": "BOS"
- },
- {
-  "team": "PHI"
- },
- {
-  "team": "PIT"
- },
- {
-  "team": "BUF"
- },
- {
-  "team": "UTA"
- },
- {
-  "team": "VAN"
- },
- {
-  "team": "NYI"
- },
- {
-  "team": "NYR"
- },
- {
-  "team": "DET"
- },
- {
-  "team": "CGY"
- },
- {
-  "team": "CBJ"
- },
- {
-  "team": "NJD"
- },
- {
-  "team": "TBL"
- },
- {
-  "team": "MTL"
- },
- {
-  "team": "OTT"
- },
- {
-  "team": "MIN"
- },
- {
-  "team": "LAK"
- },
- {
-  "team": "COL"
- },
- {
-  "team": "STL"
- },
- {
-  "team": "VGK"
- },
- {
-  "team": "WSH"
- },
- {
-  "team": "WPG"
- },
- {
-  "team": "TOR"
- },
- {
-  "team": "CAR"
- },
- {
-  "team": "DAL"
- },
- {
-  "team": "EDM"
- },
- {
-  "team": "FLA"
- }
+  {
+    "team": "VAN",
+    "elim order": "1",
+    "elim rank": "32",
+    "playoff wins": "0"
+  },
+  {
+    "team": "NYR",
+    "elim order": "2",
+    "elim rank": "31",
+    "playoff wins": "0"
+  },
+  {
+    "team": "TOR",
+    "elim order": "3",
+    "elim rank": "29",
+    "playoff wins": "0"
+  },
+  {
+    "team": "CHI",
+    "elim order": "3",
+    "elim rank": "29",
+    "playoff wins": "0"
+  },
+  {
+    "team": "FLA",
+    "elim order": "5",
+    "elim rank": "28",
+    "playoff wins": "0"
+  },
+  {
+    "team": "NJD",
+    "elim order": "6",
+    "elim rank": "26",
+    "playoff wins": "0"
+  },
+  {
+    "team": "CGY",
+    "elim order": "6",
+    "elim rank": "26",
+    "playoff wins": "0"
+  },
+  {
+    "team": "DET",
+    "elim order": "8",
+    "elim rank": "23",
+    "playoff wins": "0"
+  },
+  {
+    "team": "STL",
+    "elim order": "8",
+    "elim rank": "23",
+    "playoff wins": "0"
+  },
+  {
+    "team": "SEA",
+    "elim order": "8",
+    "elim rank": "23",
+    "playoff wins": "0"
+  },
+  {
+    "team": "NYI",
+    "elim order": "11",
+    "elim rank": "22",
+    "playoff wins": "0"
+  },
+  {
+    "team": "WSH",
+    "elim order": "12",
+    "elim rank": "17",
+    "playoff wins": "0"
+  },
+  {
+    "team": "CBJ",
+    "elim order": "12",
+    "elim rank": "17",
+    "playoff wins": "0"
+  },
+  {
+    "team": "NSH",
+    "elim order": "12",
+    "elim rank": "17",
+    "playoff wins": "0"
+  },
+  {
+    "team": "WPG",
+    "elim order": "12",
+    "elim rank": "17",
+    "playoff wins": "0"
+  },
+  {
+    "team": "SJS",
+    "elim order": "12",
+    "elim rank": "17",
+    "playoff wins": "0"
+  },
+  {
+    "team": "OTT",
+    "elim order": "17",
+    "elim rank": "16",
+    "playoff wins": "0"
+  },
+  {
+    "team": "LAK",
+    "elim order": "18",
+    "elim rank": "15",
+    "playoff wins": "0"
+  },
+  {
+    "team": "PIT",
+    "elim order": "19",
+    "elim rank": "14",
+    "playoff wins": "2"
+  },
+  {
+    "team": "DAL",
+    "elim order": "20",
+    "elim rank": "12",
+    "playoff wins": "2"
+  },
+  {
+    "team": "EDM",
+    "elim order": "20",
+    "elim rank": "12",
+    "playoff wins": "2"
+  },
+  {
+    "team": "BOS",
+    "elim order": "22",
+    "elim rank": "10",
+    "playoff wins": "2"
+  },
+  {
+    "team": "UTA",
+    "elim order": "22",
+    "elim rank": "10",
+    "playoff wins": "2"
+  },
+  {
+    "team": "TBL",
+    "elim order": "24",
+    "elim rank": "9",
+    "playoff wins": "3"
+  },
+  {
+    "team": "PHI",
+    "elim order": "25",
+    "elim rank": "8",
+    "playoff wins": "4"
+  },
+  {
+    "team": "MIN",
+    "elim order": "26",
+    "elim rank": "7",
+    "playoff wins": "5"
+  },
+  {
+    "team": "ANA",
+    "elim order": "27",
+    "elim rank": "6",
+    "playoff wins": "6"
+  },
+  {
+    "team": "BUF",
+    "elim order": "28",
+    "elim rank": "5",
+    "playoff wins": "7"
+  },
+  {
+    "team": "COL",
+    "elim order": "29",
+    "elim rank": "4",
+    "playoff wins": "8"
+  },
+  {
+    "team": "MTL",
+    "elim order": "30",
+    "elim rank": "3",
+    "playoff wins": "9"
+  },
+  {
+    "team": "VGK",
+    "elim order": "31",
+    "elim rank": "2",
+    "playoff wins": "14"
+  },
+  {
+    "team": "CAR",
+    "elim order": "32",
+    "elim rank": "1",
+    "playoff wins": "16"
+  }
 ],
 "2025":[
  {
