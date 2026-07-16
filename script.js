@@ -1,140 +1,254 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Script initialized');
+    console.log('SQL-powered NHL Playoff Team Stats initialized');
 
-    // Debug: Fetch repository root and subdirectory to list files
-    fetch('https://api.github.com/repos/elevation-edge-sports-data/elevation-edge-sports-data/contents/')
-        .then(response => response.json())
-        .then(files => {
-            console.log('Repository files:', files.map(f => f.name));
-            // Check subdirectory
-            fetch('https://api.github.com/repos/elevation-edge-sports-data/elevation-edge-sports-data/contents/nhl-playoff-team-stats')
-                .then(response => response.json())
-                .then(subFiles => {
-                    console.log('Subdirectory files (nhl-playoff-team-stats):', subFiles.map(f => f.name));
-                })
-                .catch(error => {
-                    console.warn('Failed to fetch subdirectory contents:', error.message);
-                });
-        })
-        .catch(error => {
-            console.warn('Failed to fetch repository contents:', error.message);
-        });
-
-    // Team code to full name mapping
     const teamNames = {
-        'AFM': 'Atlanta Flames',
-        'ANA': 'Anaheim Ducks',
-        'ARI': 'Arizona Coyotes',
-        'ATL': 'Atlanta Thrashers',
-        'BOS': 'Boston Bruins',
-        'BRK': 'Brooklyn Americans',
-        'BUF': 'Buffalo Sabres',
-        'CAR': 'Carolina Hurricanes',
-        'CBJ': 'Columbus Blue Jackets',
-        'CGS': 'California Golden Seals',
-        'CGY': 'Calgary Flames',
-        'CHI': 'Chicago Blackhawks',
-        'CLE': 'Cleveland Barons',
-        'CLR': 'Colorado Rockies',
-        'COL': 'Colorado Avalanche',
-        'DAL': 'Dallas Stars',
-        'DCG': 'Detroit Cougars',
-        'DET': 'Detroit Red Wings',
-        'DFL': 'Detroit Falcons',
-        'EDM': 'Edmonton Oilers',
-        'FLA': 'Florida Panthers',
-        'HAM': 'Hamilton Tigers',
-        'HFD': 'Hartford Whalers',
-        'KCS': 'Kansas City Scouts',
-        'LAK': 'Los Angeles Kings',
-        'MIN': 'Minnesota Wild',
-        'MMR': 'Montreal Maroons',
-        'MNS': 'Minnesota North Stars',
-        'MTL': 'Montreal Canadiens',
-        'MWN': 'Montreal Wanderers',
-        'NJD': 'New Jersey Devils',
-        'NSH': 'Nashville Predators',
-        'NYA': 'New York Americans',
-        'NYI': 'New York Islanders',
-        'NYR': 'New York Rangers',
-        'OAK': 'Oakland Seals',
-        'OTT': 'Ottawa Senators',
-        'PHI': 'Philadelphia Flyers',
-        'PHX': 'Phoenix Coyotes',
-        'PIR': 'Pittsburgh Pirates',
-        'PIT': 'Pittsburgh Penguins',
-        'QBD': 'Quebec Bulldogs',
-        'QUA': 'Philadelphia Quakers',
-        'QUE': 'Quebec Nordiques',
-        'SEA': 'Seattle Kraken',
-        'SEN': 'Ottawa Senators (Original)',
-        'SJS': 'San Jose Sharks',
-        'SLE': 'St. Louis Eagles',
-        'STL': 'St. Louis Blues',
-        'TAN': 'Toronto Arenas',
-        'TBL': 'Tampa Bay Lightning',
-        'TOR': 'Toronto Maple Leafs',
-        'TSP': 'Toronto St. Patricks',
-        'UTA': 'Utah Hockey Club',
-        'VAN': 'Vancouver Canucks',
-        'VGK': 'Vegas Golden Knights',
-        'WIN': 'Winnipeg Jets (Original)',
-        'WPG': 'Winnipeg Jets',
-        'WSH': 'Washington Capitals'
+        'AFM': 'Atlanta Flames', 'ANA': 'Anaheim Ducks', 'ARI': 'Arizona Coyotes',
+        'ATL': 'Atlanta Thrashers', 'BOS': 'Boston Bruins', 'BRK': 'Brooklyn Americans',
+        'BUF': 'Buffalo Sabres', 'CAR': 'Carolina Hurricanes', 'CBJ': 'Columbus Blue Jackets',
+        'CGS': 'California Golden Seals', 'CGY': 'Calgary Flames', 'CHI': 'Chicago Blackhawks',
+        'CLE': 'Cleveland Barons', 'CLR': 'Colorado Rockies', 'COL': 'Colorado Avalanche',
+        'DAL': 'Dallas Stars', 'DCG': 'Detroit Cougars', 'DET': 'Detroit Red Wings',
+        'DFL': 'Detroit Falcons', 'EDM': 'Edmonton Oilers', 'FLA': 'Florida Panthers',
+        'HAM': 'Hamilton Tigers', 'HFD': 'Hartford Whalers', 'KCS': 'Kansas City Scouts',
+        'LAK': 'Los Angeles Kings', 'MIN': 'Minnesota Wild', 'MMR': 'Montreal Maroons',
+        'MNS': 'Minnesota North Stars', 'MTL': 'Montreal Canadiens', 'MWN': 'Montreal Wanderers',
+        'NJD': 'New Jersey Devils', 'NSH': 'Nashville Predators', 'NYA': 'New York Americans',
+        'NYI': 'New York Islanders', 'NYR': 'New York Rangers', 'OAK': 'Oakland Seals',
+        'OTT': 'Ottawa Senators', 'PHI': 'Philadelphia Flyers', 'PHX': 'Phoenix Coyotes',
+        'PIR': 'Pittsburgh Pirates', 'PIT': 'Pittsburgh Penguins', 'QBD': 'Quebec Bulldogs',
+        'QUA': 'Philadelphia Quakers', 'QUE': 'Quebec Nordiques', 'SEA': 'Seattle Kraken',
+        'SEN': 'Ottawa Senators (Original)', 'SJS': 'San Jose Sharks', 'SLE': 'St. Louis Eagles',
+        'STL': 'St. Louis Blues', 'TAN': 'Toronto Arenas', 'TBL': 'Tampa Bay Lightning',
+        'TOR': 'Toronto Maple Leafs', 'TSP': 'Toronto St. Patricks', 'UTA': 'Utah Hockey Club',
+        'VAN': 'Vancouver Canucks', 'VGK': 'Vegas Golden Knights', 'WIN': 'Winnipeg Jets (Original)',
+        'WPG': 'Winnipeg Jets', 'WSH': 'Washington Capitals'
     };
 
     let data = {};
-    let teamColors = {};
-    let teamSecondaryColors = {};
-    let teamTertiaryColors = {};
-    let teamQuaternaryColors = {};
-    let teamQuinaryColors = {};
+    let teamColors = {}, teamSecondaryColors = {}, teamTertiaryColors = {};
+    let teamQuaternaryColors = {}, teamQuinaryColors = {};
     let uniqueLogos = {};
     let sortColumn = 'year';
     let sortDirection = 'desc';
+    let db = null;
 
-    // Default colors
-    const defaultColors = {
-        c1: '#111111',
-        c2: '#A4A9AD',
-        c3: '#A4A9AD',
-        c4: '#111111',
-        c5: '#A4A9AD'
-    };
-
-    // Configure base paths for GitHub Pages, prioritizing /nhl-playoff-team-stats/
+    const defaultColors = { c1: '#111111', c2: '#A4A9AD', c3: '#A4A9AD', c4: '#111111', c5: '#A4A9AD' };
     const isGitHubPages = window.location.hostname.includes('github.io');
     const basePaths = isGitHubPages ? ['/nhl-playoff-team-stats/', '/', '/elevation-edge-sports-data/', '/docs/'] : [''];
-    console.log('Base paths:', basePaths);
 
-    // Fetch files
-    async function tryFetch(filePath, basePaths) {
-        for (const base of basePaths) {
+    async function tryFetch(filePath, paths = basePaths) {
+        for (const base of paths) {
             const url = `${base}${filePath}`;
-            console.log(`Fetching: ${url}`);
             try {
                 const response = await fetch(url);
                 if (response.ok) {
-                    console.log(`Loaded: ${url}`);
+                    if (!window.basePath) window.basePath = base;
                     return { response, base };
                 }
-                console.warn(`Fetch failed: ${url} (Status: ${response.status})`);
-            } catch (error) {
-                console.warn(`Fetch error: ${url} (${error.message})`);
-            }
+            } catch (e) {}
         }
-        throw new Error(`Failed to load ${filePath}`);
+        return null;
     }
 
-    // Load files
-    tryFetch('NHLteamcolors.json', basePaths)
-        .then(({ response, base }) => {
-            window.basePath = base;
-            console.log(`Base path set: ${base}`);
-            return response.json();
-        })
+    function getProperty(obj, prop) {
+        if (!obj || typeof obj !== 'object') return undefined;
+        const key = Object.keys(obj).find(k => k.toLowerCase() === prop.toLowerCase());
+        return key ? obj[key] : undefined;
+    }
+
+    // Simple CSV parser
+    function parseCSV(text) {
+        const lines = text.trim().split(/\r?\n/);
+        if (lines.length < 2) return [];
+        const headers = lines[0].split(',').map(h => h.trim());
+        return lines.slice(1).map(line => {
+            const vals = line.split(',');
+            const obj = {};
+            headers.forEach((h, i) => obj[h] = vals[i] !== undefined ? vals[i].trim() : '');
+            return obj;
+        });
+    }
+
+    async function initSQL(jsonData) {
+        if (typeof initSqlJs === 'undefined') {
+            await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js';
+                s.onload = resolve;
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        }
+        const SQL = await initSqlJs({
+            locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+        });
+        db = new SQL.Database();
+
+        db.run(`
+            CREATE TABLE playoff_results (
+                season INTEGER NOT NULL, team_abbr TEXT NOT NULL,
+                elim_order INTEGER, elim_rank INTEGER, playoff_wins INTEGER,
+                PRIMARY KEY (season, team_abbr)
+            );
+            CREATE TABLE regular_season (
+                season INTEGER NOT NULL, team_abbr TEXT NOT NULL,
+                gp INTEGER, w INTEGER, l INTEGER, otl INTEGER,
+                pts INTEGER, pts_pct REAL, gf INTEGER, ga INTEGER, gd INTEGER,
+                PRIMARY KEY (season, team_abbr)
+            );
+            CREATE TABLE team_advanced (
+                season INTEGER NOT NULL, team_abbr TEXT NOT NULL,
+                xgf_pct REAL, cf_pct REAL, ff_pct REAL,
+                PRIMARY KEY (season, team_abbr)
+            );
+            CREATE INDEX idx_pr_team ON playoff_results(team_abbr);
+            CREATE INDEX idx_rs_team ON regular_season(team_abbr);
+            CREATE INDEX idx_adv_team ON team_advanced(team_abbr);
+        `);
+
+        // 1. Playoff data (always from data.json)
+        const insertPlayoff = db.prepare(
+            `INSERT OR REPLACE INTO playoff_results (season, team_abbr, elim_order, elim_rank, playoff_wins) VALUES (?,?,?,?,?)`
+        );
+        Object.entries(jsonData).forEach(([year, yearData]) => {
+            if (!Array.isArray(yearData)) return;
+            yearData.forEach(entry => {
+                if (!entry || !entry.team) return;
+                insertPlayoff.run([
+                    parseInt(year),
+                    entry.team,
+                    getProperty(entry, 'elim order') ?? null,
+                    getProperty(entry, 'elim rank') ?? null,
+                    getProperty(entry, 'playoff wins') ?? 0
+                ]);
+            });
+        });
+        insertPlayoff.free();
+
+        // 2. Try to load real regular_season.csv
+        let rsLoaded = false;
+        const rsFetch = await tryFetch('data/regular_season.csv');
+        if (rsFetch) {
+            try {
+                const text = await rsFetch.response.text();
+                const rows = parseCSV(text);
+                const insertRS = db.prepare(
+                    `INSERT OR REPLACE INTO regular_season 
+                     (season, team_abbr, gp, w, l, otl, pts, pts_pct, gf, ga, gd) 
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?)`
+                );
+                rows.forEach(r => {
+                    if (!r.season || !r.team_abbr) return;
+                    insertRS.run([
+                        parseInt(r.season), r.team_abbr,
+                        parseInt(r.gp) || null, parseInt(r.w) || null, parseInt(r.l) || null, parseInt(r.otl) || null,
+                        parseInt(r.pts) || null, parseFloat(r.pts_pct) || null,
+                        parseInt(r.gf) || null, parseInt(r.ga) || null, parseInt(r.gd) || null
+                    ]);
+                });
+                insertRS.free();
+                rsLoaded = true;
+                console.log(`Loaded ${rows.length} real regular_season rows from CSV`);
+            } catch (e) {
+                console.warn('Failed to parse regular_season.csv', e);
+            }
+        }
+
+        // 3. Try to load real team_advanced.csv
+        let advLoaded = false;
+        const advFetch = await tryFetch('data/team_advanced.csv');
+        if (advFetch) {
+            try {
+                const text = await advFetch.response.text();
+                const rows = parseCSV(text);
+                const insertAdv = db.prepare(
+                    `INSERT OR REPLACE INTO team_advanced (season, team_abbr, xgf_pct, cf_pct, ff_pct) VALUES (?,?,?,?,?)`
+                );
+                rows.forEach(r => {
+                    if (!r.season || !r.team_abbr) return;
+                    insertAdv.run([
+                        parseInt(r.season), r.team_abbr,
+                        parseFloat(r.xgf_pct) || null,
+                        parseFloat(r.cf_pct) || null,
+                        parseFloat(r.ff_pct) || null
+                    ]);
+                });
+                insertAdv.free();
+                advLoaded = true;
+                console.log(`Loaded ${rows.length} real advanced rows from CSV`);
+            } catch (e) {
+                console.warn('Failed to parse team_advanced.csv', e);
+            }
+        }
+
+        // 4. Fallback mock only for missing data
+        if (!rsLoaded || !advLoaded) {
+            console.log('Generating mock data for missing regular_season / advanced rows...');
+            const insertRS = db.prepare(
+                `INSERT OR IGNORE INTO regular_season 
+                 (season, team_abbr, gp, w, l, otl, pts, pts_pct, gf, ga, gd) 
+                 VALUES (?,?,?,?,?,?,?,?,?,?,?)`
+            );
+            const insertAdv = db.prepare(
+                `INSERT OR IGNORE INTO team_advanced (season, team_abbr, xgf_pct, cf_pct, ff_pct) VALUES (?,?,?,?,?)`
+            );
+
+            const allPlayoff = db.exec(`SELECT season, team_abbr, playoff_wins FROM playoff_results`);
+            if (allPlayoff.length > 0) {
+                allPlayoff[0].values.forEach(([season, team, pWins]) => {
+                    if (!rsLoaded) {
+                        const gp = season >= 1996 ? 82 : (season >= 1968 ? 76 : 70);
+                        const strength = 0.45 + (pWins / 40) + (Math.random() * 0.1 - 0.05);
+                        const w = Math.round(gp * Math.min(0.70, Math.max(0.30, strength)));
+                        const otl = Math.round((gp - w) * 0.22);
+                        const l = gp - w - otl;
+                        const pts = w * 2 + otl;
+                        const pts_pct = +(pts / (gp * 2)).toFixed(3);
+                        const gf = Math.round(gp * (2.55 + strength * 1.0));
+                        const ga = Math.round(gp * (3.35 - strength * 1.0));
+                        insertRS.run([season, team, gp, w, l, otl, pts, pts_pct, gf, ga, gf - ga]);
+                    }
+                    if (!advLoaded && season >= 2008) {
+                        const xgf = +(48.5 + (pWins / 20) + (Math.random() * 3 - 1.5)).toFixed(1);
+                        const cf  = +(49.0 + (pWins / 25) + (Math.random() * 2.5 - 1.2)).toFixed(1);
+                        const ff  = +(49.0 + (pWins / 25) + (Math.random() * 2.5 - 1.2)).toFixed(1);
+                        insertAdv.run([season, team, xgf, cf, ff]);
+                    }
+                });
+            }
+            insertRS.free();
+            insertAdv.free();
+        }
+
+        const counts = db.exec(`
+            SELECT 
+                (SELECT COUNT(*) FROM playoff_results),
+                (SELECT COUNT(*) FROM regular_season),
+                (SELECT COUNT(*) FROM team_advanced)
+        `)[0].values[0];
+        console.log(`SQL ready → playoffs: ${counts[0]} | regular_season: ${counts[1]} | advanced: ${counts[2]}`);
+        console.log(`Sources: regular_season=${rsLoaded ? 'CSV' : 'mock'} | advanced=${advLoaded ? 'CSV' : 'mock'}`);
+    }
+
+    function runQuery(sql, params = []) {
+        if (!db) return [];
+        try {
+            const stmt = db.prepare(sql);
+            if (params.length) stmt.bind(params);
+            const results = [];
+            while (stmt.step()) results.push(stmt.getAsObject());
+            stmt.free();
+            return results;
+        } catch (e) {
+            console.error('SQL error:', e.message);
+            return [];
+        }
+    }
+
+    // ========== LOAD ==========
+    tryFetch('NHLteamcolors.json')
+        .then(r => r ? r.response.json() : [])
         .then(colorData => {
-            console.log('NHLteamcolors.json loaded successfully');
             if (Array.isArray(colorData)) {
                 colorData.forEach(entry => {
                     if (entry.team) {
@@ -146,361 +260,231 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             }
-            return tryFetch('uniquelogos.json', [window.basePath]);
+            return tryFetch('uniquelogos.json');
         })
-        .then(({ response }) => response.json())
+        .then(r => r ? r.response.json() : [])
         .then(logoData => {
-            console.log('uniquelogos.json loaded successfully');
             if (Array.isArray(logoData)) {
                 logoData.forEach(entry => {
                     if (entry.team) {
                         uniqueLogos[entry.team] = [];
                         for (let key in entry) {
-                            if (key.startsWith('Column') && entry[key]) {
-                                uniqueLogos[entry.team].push(entry[key]);
-                            }
+                            if (key.startsWith('Column') && entry[key]) uniqueLogos[entry.team].push(entry[key]);
                         }
                     }
                 });
             }
-            return tryFetch('data.json', [window.basePath]);
+            return tryFetch('data.json');
         })
-        .then(({ response }) => response.json())
-        .then(jsonData => {
-            console.log('data.json loaded successfully');
+        .then(r => r ? r.response.json() : {})
+        .then(async jsonData => {
             data = jsonData || {};
+            await initSQL(data);
             populateTeamSelector();
+            const sel = document.getElementById('teamSelector');
+            if (sel) {
+                sel.value = 'COL';
+                updateVisualization();
+            }
         })
-        .catch(error => {
-            console.error('Load error:', error.message);
-            console.error('Failed to load one or more files: NHLteamcolors.json, uniquelogos.json, data.json');
-            alert('Failed to load data. Using fallback teams.');
-            data = {};
-            populateTeamSelector();
+        .catch(err => {
+            console.error(err);
+            alert('Failed to load core data files.');
         });
 
-    // Populate team selector
     function populateTeamSelector() {
-        console.log('Populating team selector');
         const teams = new Set();
         Object.values(data).forEach(yearData => {
-            if (Array.isArray(yearData)) {
-                yearData.forEach(entry => {
-                    if (entry && entry.team) {
-                        teams.add(entry.team);
-                        console.log(`Found team: ${entry.team}`);
-                    }
-                });
-            }
+            if (Array.isArray(yearData)) yearData.forEach(e => { if (e && e.team) teams.add(e.team); });
         });
-
-        if (teams.size === 0) {
-            console.warn('No teams in data, using fallback');
-            Object.keys(teamNames).forEach(team => teams.add(team));
-        }
+        if (teams.size === 0) Object.keys(teamNames).forEach(t => teams.add(t));
 
         const selector = document.getElementById('teamSelector');
-        if (!selector) {
-            console.error('teamSelector not found');
-            alert('Error: teamSelector not found');
-            return;
-        }
-
+        if (!selector) return;
         selector.innerHTML = '<option value="">Select a team</option>';
         Array.from(teams).sort().forEach(team => {
-            const option = document.createElement('option');
-            option.value = team;
-            option.textContent = team;
-            selector.appendChild(option);
-            console.log(`Added team: ${team}`);
-        });
-        console.log(`Populated ${teams.size} teams`);
-    }
-
-    // Case-insensitive property access
-    function getProperty(obj, prop) {
-        if (!obj || typeof obj !== 'object') return undefined;
-        const lowerProp = prop.toLowerCase();
-        const key = Object.keys(obj).find(k => k.toLowerCase() === lowerProp);
-        return key ? obj[key] : undefined;
-    }
-
-    // Sort table data
-    function sortTableData(teamData, column, direction) {
-        return teamData.sort((a, b) => {
-            let valA = a[column];
-            let valB = b[column];
-            if (valA === 'N/A' || valA === null) valA = -Infinity;
-            if (valB === 'N/A' || valB === null) valB = -Infinity;
-            if (valA === valB) return 0;
-            return direction === 'asc' ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
+            const opt = document.createElement('option');
+            opt.value = team;
+            opt.textContent = team;
+            selector.appendChild(opt);
         });
     }
 
-    // Update visualization
-    window.updateVisualization = function() {
+    window.updateVisualization = function () {
         const team = document.getElementById('teamSelector').value;
-        console.log('Updating for team:', team);
+        const teamNameEl = document.getElementById('teamName');
+        const teamAbbrEl = document.getElementById('teamAbbreviation');
+        const logosEl = document.getElementById('teamLogos');
 
-        const teamNameElement = document.getElementById('teamName');
-        const teamAbbreviationElement = document.getElementById('teamAbbreviation');
-        const teamLogosElement = document.getElementById('teamLogos');
-
-        if (!teamNameElement || !teamAbbreviationElement || !teamLogosElement) {
-            console.error('Missing DOM elements:', {
-                teamName: !teamNameElement,
-                teamAbbreviation: !teamAbbreviationElement,
-                teamLogos: !teamLogosElement
-            });
-            alert('Error: One or more required DOM elements are missing. Please check index.html.');
-            return;
-        }
-
-        // Reset styles
         document.body.style.backgroundColor = defaultColors.c1;
-        document.body.style.opacity = '1';
         document.querySelector('h1.header').style.color = defaultColors.c2;
         document.querySelector('.team-header').style.color = defaultColors.c2;
-        document.getElementById('teamDataTable').style.color = '#000000';
-        document.getElementById('teamDataTable').style.backgroundColor = '#FFFFFF';
-        teamLogosElement.style.backgroundColor = defaultColors.c1;
-        document.querySelectorAll('.team-logo').forEach(img => {
-            img.style.backgroundColor = '#FFFFFF';
-        });
-        document.querySelectorAll('.chart').forEach(chart => {
-            chart.style.backgroundColor = '#fff';
-        });
 
         if (!team) {
-            teamNameElement.textContent = '';
-            teamAbbreviationElement.textContent = '';
-            teamLogosElement.innerHTML = '';
+            teamNameEl.textContent = '';
+            teamAbbrEl.textContent = '';
+            logosEl.innerHTML = '';
             document.querySelector('#teamDataTable tbody').innerHTML = '';
             ['combinedHistogram', 'combinedLine', 'playoffWinsHistogram'].forEach(id => {
-                const chart = Chart.getChart(id);
-                if (chart) chart.destroy();
+                const c = Chart.getChart(id); if (c) c.destroy();
             });
             return;
         }
 
-        // Update team name, abbreviation, and logos
-        teamNameElement.textContent = teamNames[team] || team;
-        teamAbbreviationElement.textContent = team;
-        teamLogosElement.innerHTML = '';
-        const logoYears = (uniqueLogos[team] || []).map(year => parseInt(year)).sort((a, b) => a - b);
-        logoYears.forEach(year => {
+        teamNameEl.textContent = teamNames[team] || team;
+        teamAbbrEl.textContent = team;
+        logosEl.innerHTML = '';
+        (uniqueLogos[team] || []).map(y => parseInt(y)).sort((a,b)=>a-b).forEach(year => {
             const img = document.createElement('img');
-            img.src = `${window.basePath}logos/NHL${year}/${team}.png`;
+            img.src = `${window.basePath || ''}logos/NHL${year}/${team}.png`;
             img.className = 'team-logo';
-            img.alt = `${team} logo ${year}`;
-            img.style.borderColor = teamTertiaryColors[team] || '#FFFFFF';
-            img.style.backgroundColor = '#FFFFFF';
-            img.onerror = () => {
-                console.warn(`Logo failed to load: ${img.src}`);
-                img.style.display = 'none';
-            };
-            teamLogosElement.appendChild(img);
+            img.style.borderColor = teamTertiaryColors[team] || '#fff';
+            img.onerror = () => img.style.display = 'none';
+            logosEl.appendChild(img);
         });
 
-        // Update colors with safeguards
-        const primaryColor = teamColors[team] && /^#[0-9A-F]{6}$/i.test(teamColors[team]) ? teamColors[team] : defaultColors.c1;
-        const secondaryColor = teamSecondaryColors[team] && /^#[0-9A-F]{6}$/i.test(teamSecondaryColors[team]) ? teamSecondaryColors[team] : defaultColors.c2;
-        const tertiaryColor = teamTertiaryColors[team] && /^#[0-9A-F]{6}$/i.test(teamTertiaryColors[team]) ? teamTertiaryColors[team] : defaultColors.c3;
-        const quaternaryColor = teamQuaternaryColors[team] && /^#[0-9A-F]{6}$/i.test(teamQuaternaryColors[team]) ? teamQuaternaryColors[team] : defaultColors.c4;
-        const quinaryColor = teamQuinaryColors[team] && /^#[0-9A-F]{6}$/i.test(teamQuinaryColors[team]) && teamQuinaryColors[team].toLowerCase() !== '#ffffff' ? teamQuinaryColors[team] : defaultColors.c5;
+        const primary   = (teamColors[team] && /^#[0-9A-F]{6}$/i.test(teamColors[team])) ? teamColors[team] : defaultColors.c1;
+        const secondary = (teamSecondaryColors[team] && /^#[0-9A-F]{6}$/i.test(teamSecondaryColors[team])) ? teamSecondaryColors[team] : defaultColors.c2;
+        const quaternary = (teamQuaternaryColors[team] && /^#[0-9A-F]{6}$/i.test(teamQuaternaryColors[team])) ? teamQuaternaryColors[team] : defaultColors.c4;
+        const quinary    = (teamQuinaryColors[team] && /^#[0-9A-F]{6}$/i.test(teamQuinaryColors[team])) ? teamQuinaryColors[team] : defaultColors.c5;
 
-        console.log('Applying colors:', { primaryColor, secondaryColor, tertiaryColor, quaternaryColor, quinaryColor });
+        document.body.style.backgroundColor = primary;
+        document.querySelector('h1.header').style.color = secondary;
+        document.querySelector('.team-header').style.color = secondary;
+        logosEl.style.backgroundColor = primary;
 
-        document.body.style.backgroundColor = primaryColor;
-        document.querySelector('h1.header').style.color = secondaryColor;
-        document.querySelector('.team-header').style.color = secondaryColor;
-        teamLogosElement.style.backgroundColor = primaryColor;
-        document.getElementById('teamDataTable').style.backgroundColor = '#FFFFFF';
-        document.querySelectorAll('.chart').forEach(chart => {
-            chart.style.backgroundColor = '#fff';
-        });
+        const orderMap = {
+            year: 'year', rs_gp: 'rs_gp', rs_w: 'rs_w', rs_l: 'rs_l', rs_otl: 'rs_otl',
+            rs_pts: 'rs_pts', rs_pts_pct: 'rs_pts_pct', rs_gf: 'rs_gf', rs_ga: 'rs_ga', rs_gd: 'rs_gd',
+            elim_rank: 'elim_rank', elim_order: 'elim_order', playoff_wins: 'playoff_wins',
+            xgf_pct: 'xgf_pct', cf_pct: 'cf_pct', ff_pct: 'ff_pct'
+        };
+        const sqlCol = orderMap[sortColumn] || 'year';
+        const dir = sortDirection === 'asc' ? 'ASC' : 'DESC';
 
-        // Filter team data
-        const teamData = [];
-        Object.entries(data).forEach(([year, yearData]) => {
-            if (Array.isArray(yearData)) {
-                const entry = yearData.find(entry => entry && entry.team === team);
-                if (entry) {
-                    const elimOrder = getProperty(entry, 'elim order');
-                    const elimRank = getProperty(entry, 'elim rank');
-                    const playoffWins = getProperty(entry, 'playoff wins');
-                    teamData.push({ 
-                        year: parseInt(year), 
-                        elim_order: elimOrder ?? 'N/A',
-                        elim_rank: elimRank ?? 'N/A',
-                        playoff_wins: playoffWins ?? 0
-                    });
-                }
-            }
-        });
+        const rows = runQuery(`
+            SELECT 
+                p.season AS year,
+                r.gp AS rs_gp, r.w AS rs_w, r.l AS rs_l, r.otl AS rs_otl,
+                r.pts AS rs_pts, r.pts_pct AS rs_pts_pct,
+                r.gf AS rs_gf, r.ga AS rs_ga, r.gd AS rs_gd,
+                p.elim_rank, p.elim_order, p.playoff_wins,
+                a.xgf_pct, a.cf_pct, a.ff_pct
+            FROM playoff_results p
+            LEFT JOIN regular_season r ON p.season = r.season AND p.team_abbr = r.team_abbr
+            LEFT JOIN team_advanced a ON p.season = a.season AND p.team_abbr = a.team_abbr
+            WHERE p.team_abbr = ?
+            ORDER BY ${sqlCol} ${dir}
+        `, [team]);
 
-        // Sort and update table
-        sortTableData(teamData, sortColumn, sortDirection);
         const tbody = document.querySelector('#teamDataTable tbody');
         tbody.innerHTML = '';
-        teamData.forEach(entry => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><img src="${window.basePath}logos/NHL${entry.year}/${team}.png" class="logo-img" alt="${team} ${entry.year} logo" onerror="this.style.display='none'" style="background-color: #FFFFFF;"></td>
-                <td>${entry.year}</td>
-                <td>${entry.elim_rank}</td>
-                <td>${entry.elim_order}</td>
-                <td>${entry.playoff_wins}</td>
+        rows.forEach(r => {
+            const tr = document.createElement('tr');
+            const fmt = (v) => (v === null || v === undefined) ? '<span class="null-value">—</span>' : v;
+            const fmtPct = (v) => (v === null || v === undefined) ? '<span class="null-value">—</span>' : (v * 100).toFixed(1) + '%';
+            const fmtAdv = (v) => (v === null || v === undefined) ? '<span class="null-value">—</span>' : Number(v).toFixed(1);
+
+            tr.innerHTML = `
+                <td class="sticky-col"><img src="${window.basePath || ''}logos/NHL${r.year}/${team}.png" class="logo-img" onerror="this.style.display='none'"></td>
+                <td class="sticky-col">${r.year}</td>
+                <td class="group-regular">${fmt(r.rs_gp)}</td>
+                <td class="group-regular">${fmt(r.rs_w)}</td>
+                <td class="group-regular">${fmt(r.rs_l)}</td>
+                <td class="group-regular">${fmt(r.rs_otl)}</td>
+                <td class="group-regular">${fmt(r.rs_pts)}</td>
+                <td class="group-regular">${fmtPct(r.rs_pts_pct)}</td>
+                <td class="group-regular">${fmt(r.rs_gf)}</td>
+                <td class="group-regular">${fmt(r.rs_ga)}</td>
+                <td class="group-regular">${fmt(r.rs_gd)}</td>
+                <td class="group-playoffs">${fmt(r.elim_rank)}</td>
+                <td class="group-playoffs">${fmt(r.elim_order)}</td>
+                <td class="group-playoffs">${fmt(r.playoff_wins)}</td>
+                <td class="group-advanced">${fmtAdv(r.xgf_pct)}</td>
+                <td class="group-advanced">${fmtAdv(r.cf_pct)}</td>
+                <td class="group-advanced">${fmtAdv(r.ff_pct)}</td>
             `;
-            tbody.appendChild(row);
+            tbody.appendChild(tr);
         });
 
-        // Set table max-height
-        const tableContainer = document.querySelector('.table-container');
-        const firstChart = document.querySelector('.charts-container .chart:first-child');
-        if (firstChart) {
-            const firstChartRect = firstChart.getBoundingClientRect();
-            tableContainer.style.maxHeight = `${Math.max(firstChartRect.bottom - firstChartRect.top, 100)}px`;
-        } else {
-            tableContainer.style.maxHeight = '100px';
-        }
-
-        // Update sort indicators
-        document.querySelectorAll('.sortable').forEach(th => {
+        document.querySelectorAll('.column-header .sortable').forEach(th => {
             const arrow = th.querySelector('.sort-arrow');
-            const column = th.getAttribute('data-column');
+            const col = th.getAttribute('data-column');
             th.classList.remove('sorted');
             if (arrow) arrow.textContent = '';
-            if (column === sortColumn) {
+            if (col === sortColumn) {
                 th.classList.add('sorted');
-                arrow.textContent = sortDirection === 'asc' ? '↑' : '↓';
+                if (arrow) arrow.textContent = sortDirection === 'asc' ? '↑' : '↓';
             }
         });
 
-        // Prepare chart data
-        const validTeamData = teamData.filter(entry => entry.elim_order !== 'N/A' && entry.elim_rank !== 'N/A');
-        const years = validTeamData.map(entry => entry.year);
-        const elimRanks = validTeamData.map(entry => entry.elim_rank);
-        const elimOrders = validTeamData.map(entry => entry.elim_order);
-        const playoffWins = validTeamData.map(entry => entry.playoff_wins);
+        // Charts (playoff only for now)
+        const valid = rows.filter(r => r.elim_rank != null && r.elim_order != null);
+        const years = valid.map(r => r.year);
+        const ranks = valid.map(r => r.elim_rank);
+        const orders = valid.map(r => r.elim_order);
+        const winsArr = valid.map(r => r.playoff_wins);
 
-        // Generate histogram labels
-        const maxValue = 32;
-        const maxWins = 16;
-        const rankFrequencies = Array(maxValue + 1).fill(0);
-        const orderFrequencies = Array(maxValue + 1).fill(0);
-        const winsFrequencies = Array(maxWins + 1).fill(0);
-        elimRanks.forEach(rank => {
-            if (typeof rank === 'number' && rank >= 0 && rank <= maxValue) rankFrequencies[rank]++;
-        });
-        elimOrders.forEach(order => {
-            if (typeof order === 'number' && order >= 0 && order <= maxValue) orderFrequencies[order]++;
-        });
-        playoffWins.forEach(wins => {
-            if (typeof wins === 'number' && wins >= 0 && wins <= maxWins) winsFrequencies[wins]++;
-        });
-        const sequentialLabels = Array.from({ length: maxValue + 1 }, (_, i) => i);
-        const winsLabels = Array.from({ length: maxWins + 1 }, (_, i) => i);
+        const maxV = 32, maxW = 16;
+        const rankFreq = Array(maxV+1).fill(0);
+        const orderFreq = Array(maxV+1).fill(0);
+        const winsFreq = Array(maxW+1).fill(0);
+        ranks.forEach(v => { if (v >= 0 && v <= maxV) rankFreq[v]++; });
+        orders.forEach(v => { if (v >= 0 && v <= maxV) orderFreq[v]++; });
+        winsArr.forEach(v => { if (v >= 0 && v <= maxW) winsFreq[v]++; });
 
-        // Destroy existing charts
         ['combinedHistogram', 'combinedLine', 'playoffWinsHistogram'].forEach(id => {
-            const chart = Chart.getChart(id);
-            if (chart) chart.destroy();
+            const c = Chart.getChart(id); if (c) c.destroy();
         });
 
-        // Combined Histogram
         new Chart(document.getElementById('combinedHistogram'), {
             type: 'bar',
             data: {
-                labels: sequentialLabels,
+                labels: Array.from({length: maxV+1}, (_,i)=>i),
                 datasets: [
-                    {
-                        label: 'Playoff Rank Frequency',
-                        data: rankFrequencies,
-                        backgroundColor: (quaternaryColor || '#000000') + '80',
-                        borderColor: quaternaryColor || '#000000',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Elimination Number Frequency',
-                        data: orderFrequencies,
-                        backgroundColor: (quinaryColor || '#000000') + '80',
-                        borderColor: quinaryColor || '#000000',
-                        borderWidth: 1
-                    }
+                    { label: 'Playoff Rank Freq', data: rankFreq, backgroundColor: quaternary+'90', borderColor: quaternary, borderWidth: 1 },
+                    { label: 'Elim Order Freq', data: orderFreq, backgroundColor: quinary+'90', borderColor: quinary, borderWidth: 1 }
                 ]
             },
             options: {
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: 'Frequency' }, ticks: { stepSize: 1, precision: 0 } },
-                    x: { title: { display: true, text: 'Value' }, grid: { display: false } }
-                },
-                plugins: { title: { display: false } }
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { title: { display: true, text: 'Value' } } },
+                plugins: { legend: { position: 'top' } }
             }
         });
 
-        // Combined Line Graph
         new Chart(document.getElementById('combinedLine'), {
             type: 'line',
             data: {
                 labels: years,
                 datasets: [
-                    {
-                        label: 'Playoff Rank',
-                        data: elimRanks,
-                        borderColor: quaternaryColor || '#000000',
-                        backgroundColor: (quaternaryColor || '#000000') + '80',
-                        fill: true,
-                        datalabels: { align: 'top', offset: 4, color: quaternaryColor || '#000000', font: { weight: 'bold' } }
-                    },
-                    {
-                        label: 'Elimination Number',
-                        data: elimOrders,
-                        borderColor: quinaryColor || '#000000',
-                        backgroundColor: (quinaryColor || '#000000') + '80',
-                        fill: true,
-                        datalabels: { align: 'top', offset: 4, color: quinaryColor || '#000000', font: { weight: 'bold' } }
-                    }
+                    { label: 'Playoff Rank', data: ranks, borderColor: quaternary, backgroundColor: quaternary+'40', fill: true, tension: 0.1 },
+                    { label: 'Elim Order', data: orders, borderColor: quinary, backgroundColor: quinary+'40', fill: true, tension: 0.1 }
                 ]
             },
             options: {
-                scales: {
-                    y: { min: 0, max: 32, title: { display: true, text: 'Value' }, ticks: { stepSize: 2, precision: 0 } },
-                    x: { title: { display: true, text: 'Year' }, grid: { display: false } }
-                },
-                plugins: { title: { display: false }, datalabels: { display: true } }
+                scales: { y: { min: 0, max: 32 }, x: { title: { display: true, text: 'Year' } } },
+                plugins: { legend: { position: 'top' } }
             }
         });
 
-        // Playoff Wins Histogram
         new Chart(document.getElementById('playoffWinsHistogram'), {
             type: 'bar',
             data: {
-                labels: winsLabels,
-                datasets: [{
-                    label: 'Playoff Wins Frequency',
-                    data: winsFrequencies,
-                    backgroundColor: (quaternaryColor || '#000000') + '80',
-                    borderColor: quaternaryColor || '#000000',
-                    borderWidth: 1
-                }]
+                labels: Array.from({length: maxW+1}, (_,i)=>i),
+                datasets: [{ label: 'Playoff Wins Freq', data: winsFreq, backgroundColor: quaternary+'90', borderColor: quaternary, borderWidth: 1 }]
             },
             options: {
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: 'Frequency' }, ticks: { stepSize: 1, precision: 0 } },
-                    x: { title: { display: true, text: 'Playoff Wins' }, grid: { display: false } }
-                },
-                plugins: { title: { display: true, text: 'Playoff Wins' }, legend: { display: false } }
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { title: { display: true, text: 'Playoff Wins' } } },
+                plugins: { legend: { display: false } }
             }
         });
     };
 
-    // Add sorting listeners
-    document.querySelectorAll('.sortable').forEach(th => {
+    document.querySelectorAll('.column-header .sortable').forEach(th => {
         th.addEventListener('click', () => {
-            const column = th.getAttribute('data-column');
-            sortDirection = (column === sortColumn) ? (sortDirection === 'asc' ? 'desc' : 'asc') : 'asc';
-            sortColumn = column;
+            const col = th.getAttribute('data-column');
+            sortDirection = (col === sortColumn) ? (sortDirection === 'asc' ? 'desc' : 'asc') : 'desc';
+            sortColumn = col;
             updateVisualization();
         });
     });

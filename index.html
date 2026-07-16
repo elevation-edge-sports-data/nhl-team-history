@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NHL Playoff Team Stats</title>
+    <meta name="description" content="Interactive NHL Stanley Cup Playoff history and franchise statistics powered by SQL.">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -26,16 +27,43 @@
             <div class="table-container">
                 <table id="teamDataTable">
                     <thead>
-                        <tr>
-                            <th>Logo</th>
-                            <th class="sortable" data-column="year">Year <span class="sort-arrow"></span></th>
-                            <th class="sortable" data-column="elim_rank">Rank <span class="sort-arrow"></span></th>
-                            <th class="sortable" data-column="elim_order">Elim No. <span class="sort-arrow"></span></th>
-                            <th class="sortable" data-column="playoff_wins">Playoff Wins <span class="sort-arrow"></span></th>
+                        <!-- Group headers -->
+                        <tr class="group-header">
+                            <th colspan="2" class="group-identity"></th>
+                            <th colspan="9" class="group-regular">Regular Season</th>
+                            <th colspan="3" class="group-playoffs">Playoffs</th>
+                            <th colspan="3" class="group-advanced">Advanced Stats</th>
+                        </tr>
+                        <!-- Column headers -->
+                        <tr class="column-header">
+                            <th class="sticky-col">Logo</th>
+                            <th class="sortable sticky-col" data-column="year">Year <span class="sort-arrow"></span></th>
+                            <!-- Regular Season -->
+                            <th class="sortable group-regular" data-column="rs_gp">GP <span class="sort-arrow"></span></th>
+                            <th class="sortable group-regular" data-column="rs_w">W <span class="sort-arrow"></span></th>
+                            <th class="sortable group-regular" data-column="rs_l">L <span class="sort-arrow"></span></th>
+                            <th class="sortable group-regular" data-column="rs_otl">OTL <span class="sort-arrow"></span></th>
+                            <th class="sortable group-regular" data-column="rs_pts">PTS <span class="sort-arrow"></span></th>
+                            <th class="sortable group-regular" data-column="rs_pts_pct">PTS% <span class="sort-arrow"></span></th>
+                            <th class="sortable group-regular" data-column="rs_gf">GF <span class="sort-arrow"></span></th>
+                            <th class="sortable group-regular" data-column="rs_ga">GA <span class="sort-arrow"></span></th>
+                            <th class="sortable group-regular" data-column="rs_gd">GD <span class="sort-arrow"></span></th>
+                            <!-- Playoffs -->
+                            <th class="sortable group-playoffs" data-column="elim_rank">Rank <span class="sort-arrow"></span></th>
+                            <th class="sortable group-playoffs" data-column="elim_order">Elim Order <span class="sort-arrow"></span></th>
+                            <th class="sortable group-playoffs" data-column="playoff_wins">Playoff Wins <span class="sort-arrow"></span></th>
+                            <!-- Advanced -->
+                            <th class="sortable group-advanced" data-column="xgf_pct">xGF% <span class="sort-arrow"></span></th>
+                            <th class="sortable group-advanced" data-column="cf_pct">CF% <span class="sort-arrow"></span></th>
+                            <th class="sortable group-advanced" data-column="ff_pct">FF% <span class="sort-arrow"></span></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
+            </div>
+            <div class="sql-info">
+                Powered by <strong>SQL</strong> (sql.js / SQLite) · 
+                Schema: <code>playoff_results</code> + <code>regular_season</code> + <code>team_advanced</code>
             </div>
         </div>
         <div class="charts-container">
@@ -50,6 +78,48 @@
             </div>
         </div>
     </div>
+
+    <!-- Clean technical SQL reference -->
+    <div id="sqlShowcase">
+        <h2>SQL Reference</h2>
+        <p>This application loads playoff, regular season, and advanced metrics into an in-browser SQLite database and powers all visualizations with SQL.</p>
+
+        <details>
+            <summary>Schema</summary>
+            <pre><code>CREATE TABLE playoff_results (
+    season INTEGER, team_abbr TEXT,
+    elim_order INTEGER, elim_rank INTEGER, playoff_wins INTEGER
+);
+
+CREATE TABLE regular_season (
+    season INTEGER, team_abbr TEXT,
+    gp INTEGER, w INTEGER, l INTEGER, otl INTEGER,
+    pts INTEGER, pts_pct REAL, gf INTEGER, ga INTEGER, gd INTEGER
+);
+
+CREATE TABLE team_advanced (
+    season INTEGER, team_abbr TEXT,
+    xgf_pct REAL, cf_pct REAL, ff_pct REAL
+);  -- populated only for ~2008 onward</code></pre>
+        </details>
+
+        <details>
+            <summary>Wide view used by the table</summary>
+            <pre><code>SELECT 
+    p.season AS year, p.team_abbr,
+    r.gp AS rs_gp, r.w AS rs_w, r.l AS rs_l, r.otl AS rs_otl,
+    r.pts AS rs_pts, r.pts_pct AS rs_pts_pct,
+    r.gf AS rs_gf, r.ga AS rs_ga, r.gd AS rs_gd,
+    p.elim_rank, p.elim_order, p.playoff_wins,
+    a.xgf_pct, a.cf_pct, a.ff_pct
+FROM playoff_results p
+LEFT JOIN regular_season r ON p.season = r.season AND p.team_abbr = r.team_abbr
+LEFT JOIN team_advanced a ON p.season = a.season AND p.team_abbr = a.team_abbr
+WHERE p.team_abbr = ?
+ORDER BY year DESC;</code></pre>
+        </details>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
