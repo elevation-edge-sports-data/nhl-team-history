@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NHL Playoff Team Stats</title>
-    <meta name="description" content="Interactive NHL Stanley Cup Playoff history and franchise statistics powered by SQL.">
+    <title>NHL Playoff Team Stats | Elevation Edge Sports Data</title>
+    <meta name="description" content="Interactive NHL team analytics: regular season, advanced possession metrics (xGF%, CF%, FF%), and Stanley Cup Playoff history powered by in-browser SQL.">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -17,28 +17,30 @@
             <div id="teamLogos"></div>
             <h2 id="teamName"></h2>
         </div>
+
+        <!-- KEY INSIGHTS STRIP (new) -->
+        <div id="insightsPanel" class="insights-panel"></div>
+
         <div class="table-area">
             <div class="selector-container">
                 <label for="teamSelector">Select Team:</label>
                 <select id="teamSelector" onchange="updateVisualization()">
                     <option value="">Select a team</option>
                 </select>
+                <span class="hint">Sort any column · All data joined via SQL</span>
             </div>
             <div class="table-container">
                 <table id="teamDataTable">
                     <thead>
-                        <!-- Group headers -->
                         <tr class="group-header">
-                            <th colspan="2" class="group-identity"></th>
+                            <th colspan="2" class="group-identity">Team</th>
                             <th colspan="9" class="group-regular">Regular Season</th>
                             <th colspan="3" class="group-playoffs">Playoffs</th>
-                            <th colspan="3" class="group-advanced">Advanced Stats</th>
+                            <th colspan="3" class="group-advanced">Advanced Stats (≈2008+)</th>
                         </tr>
-                        <!-- Column headers -->
                         <tr class="column-header">
                             <th class="sticky-col">Logo</th>
                             <th class="sortable sticky-col" data-column="year">Year <span class="sort-arrow"></span></th>
-                            <!-- Regular Season -->
                             <th class="sortable group-regular" data-column="rs_gp">GP <span class="sort-arrow"></span></th>
                             <th class="sortable group-regular" data-column="rs_w">W <span class="sort-arrow"></span></th>
                             <th class="sortable group-regular" data-column="rs_l">L <span class="sort-arrow"></span></th>
@@ -48,11 +50,9 @@
                             <th class="sortable group-regular" data-column="rs_gf">GF <span class="sort-arrow"></span></th>
                             <th class="sortable group-regular" data-column="rs_ga">GA <span class="sort-arrow"></span></th>
                             <th class="sortable group-regular" data-column="rs_gd">GD <span class="sort-arrow"></span></th>
-                            <!-- Playoffs -->
                             <th class="sortable group-playoffs" data-column="elim_rank">Rank <span class="sort-arrow"></span></th>
                             <th class="sortable group-playoffs" data-column="elim_order">Elim Order <span class="sort-arrow"></span></th>
                             <th class="sortable group-playoffs" data-column="playoff_wins">Playoff Wins <span class="sort-arrow"></span></th>
-                            <!-- Advanced -->
                             <th class="sortable group-advanced" data-column="xgf_pct">xGF% <span class="sort-arrow"></span></th>
                             <th class="sortable group-advanced" data-column="cf_pct">CF% <span class="sort-arrow"></span></th>
                             <th class="sortable group-advanced" data-column="ff_pct">FF% <span class="sort-arrow"></span></th>
@@ -63,28 +63,34 @@
             </div>
             <div class="sql-info">
                 Powered by <strong>SQL</strong> (sql.js / SQLite) · 
-                Schema: <code>playoff_results</code> + <code>regular_season</code> + <code>team_advanced</code>
+                Schema: <code>playoff_results</code> + <code>regular_season</code> + <code>team_advanced</code> ·
+                Visualizations use full joined data (process metrics ↔ outcomes)
             </div>
         </div>
+
+        <!-- VISUALIZATIONS: 2x2 industry competitive grid -->
         <div class="charts-container">
-            <div class="chart">
-                <canvas id="combinedLine"></canvas>
+            <div class="chart chart-wide">
+                <canvas id="trendChart"></canvas>
             </div>
             <div class="chart">
-                <canvas id="combinedHistogram"></canvas>
+                <canvas id="scatterChart"></canvas>
             </div>
             <div class="chart">
                 <canvas id="playoffWinsHistogram"></canvas>
             </div>
+            <div class="chart">
+                <canvas id="radarChart"></canvas>
+            </div>
         </div>
     </div>
 
-    <!-- Clean technical SQL reference -->
+    <!-- SQL Reference -->
     <div id="sqlShowcase">
-        <h2>SQL Reference</h2>
-        <p>This application loads playoff, regular season, and advanced metrics into an in-browser SQLite database and powers all visualizations with SQL.</p>
+        <h2>SQL Reference & Analytics Notes</h2>
+        <p>This application loads playoff, regular season, and advanced metrics into an in-browser SQLite database.</p>
 
-        <details>
+        <details open>
             <summary>Schema</summary>
             <pre><code>CREATE TABLE playoff_results (
     season INTEGER, team_abbr TEXT,
@@ -104,7 +110,7 @@ CREATE TABLE team_advanced (
         </details>
 
         <details>
-            <summary>Wide view used by the table</summary>
+            <summary>Wide view used by the table & charts</summary>
             <pre><code>SELECT 
     p.season AS year, p.team_abbr,
     r.gp AS rs_gp, r.w AS rs_w, r.l AS rs_l, r.otl AS rs_otl,
@@ -117,6 +123,17 @@ LEFT JOIN regular_season r ON p.season = r.season AND p.team_abbr = r.team_abbr
 LEFT JOIN team_advanced a ON p.season = a.season AND p.team_abbr = a.team_abbr
 WHERE p.team_abbr = ?
 ORDER BY year DESC;</code></pre>
+        </details>
+
+        <details>
+            <summary>Visualization design notes</summary>
+            <ul>
+                <li><strong>Trend multi-axis</strong>: Shows how regular-season form and possession process (xGF%/CF%) co-move with playoff outcomes.</li>
+                <li><strong>Bubble scatter</strong>: Classic "are we good or lucky?" chart. Bubble size encodes PTS% so you immediately see whether high-xGF teams also dominated the standings.</li>
+                <li><strong>Distribution + conditional averages</strong>: Hover any bar to see average advanced metrics of seasons that reached that win total — instant cohort analysis.</li>
+                <li><strong>Radar profile</strong>: Compact multi-dimensional snapshot of recent competitive shape.</li>
+                <li><strong>SQL-first design</strong>: Normalized tables, analytical queries, and insights all run client-side with no backend.</li>
+            </ul>
         </details>
     </div>
 

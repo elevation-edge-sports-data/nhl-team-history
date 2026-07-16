@@ -325,9 +325,10 @@ document.addEventListener('DOMContentLoaded', () => {
             teamAbbrEl.textContent = '';
             logosEl.innerHTML = '';
             document.querySelector('#teamDataTable tbody').innerHTML = '';
-            ['combinedHistogram', 'combinedLine', 'playoffWinsHistogram'].forEach(id => {
+            ['trendChart', 'scatterChart', 'playoffWinsHistogram', 'insightsChart'].forEach(id => {
                 const c = Chart.getChart(id); if (c) c.destroy();
             });
+            document.getElementById('insightsPanel').innerHTML = '';
             return;
         }
 
@@ -382,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rows.forEach(r => {
             const tr = document.createElement('tr');
             const fmt = (v) => (v === null || v === undefined) ? '<span class="null-value">—</span>' : v;
-            const fmtPct = (v) => (v === null || v === undefined) ? '<span class="null-value">—</span>' : (v * 100).toFixed(1) + '%';
+            const fmtPct = (v) => (v === null || v === undefined) ? '<span class="null-value">—</span>' : (Number(v) * 100).toFixed(1) + '%';
             const fmtAdv = (v) => (v === null || v === undefined) ? '<span class="null-value">—</span>' : Number(v).toFixed(1);
 
             tr.innerHTML = `
@@ -418,66 +419,335 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Charts (playoff only for now)
-        const valid = rows.filter(r => r.elim_rank != null && r.elim_order != null);
-        const years = valid.map(r => r.year);
-        const ranks = valid.map(r => r.elim_rank);
-        const orders = valid.map(r => r.elim_order);
-        const winsArr = valid.map(r => r.playoff_wins);
-
-        const maxV = 32, maxW = 16;
-        const rankFreq = Array(maxV+1).fill(0);
-        const orderFreq = Array(maxV+1).fill(0);
-        const winsFreq = Array(maxW+1).fill(0);
-        ranks.forEach(v => { if (v >= 0 && v <= maxV) rankFreq[v]++; });
-        orders.forEach(v => { if (v >= 0 && v <= maxV) orderFreq[v]++; });
-        winsArr.forEach(v => { if (v >= 0 && v <= maxW) winsFreq[v]++; });
-
-        ['combinedHistogram', 'combinedLine', 'playoffWinsHistogram'].forEach(id => {
+        // ========== INDUSTRY-GRADE VISUALIZATIONS ==========
+        // Destroy old charts
+        ['trendChart', 'scatterChart', 'playoffWinsHistogram', 'radarChart'].forEach(id => {
             const c = Chart.getChart(id); if (c) c.destroy();
         });
 
-        new Chart(document.getElementById('combinedHistogram'), {
-            type: 'bar',
-            data: {
-                labels: Array.from({length: maxV+1}, (_,i)=>i),
-                datasets: [
-                    { label: 'Playoff Rank Freq', data: rankFreq, backgroundColor: quaternary+'90', borderColor: quaternary, borderWidth: 1 },
-                    { label: 'Elim Order Freq', data: orderFreq, backgroundColor: quinary+'90', borderColor: quinary, borderWidth: 1 }
-                ]
-            },
-            options: {
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { title: { display: true, text: 'Value' } } },
-                plugins: { legend: { position: 'top' } }
-            }
-        });
+        // Prepare data (sorted by year ascending for trends)
+        const chron = [...rows].filter(r => r.year != null).sort((a,b) => a.year - b.year);
+        const years = chron.map(r => r.year);
+        const ptsPct = chron.map(r => r.rs_pts_pct != null ? +(r.rs_pts_pct * 100).toFixed(1) : null);
+        const xgf = chron.map(r => r.xgf_pct != null ? +Number(r.xgf_pct).toFixed(1) : null);
+        const cf = chron.map(r => r.cf_pct != null ? +Number(r.cf_pct).toFixed(1) : null);
+        const ff = chron.map(r => r.ff_pct != null ? +Number(r.ff_pct).toFixed(1) : null);
+        const pWins = chron.map(r => r.playoff_wins != null ? r.playoff_wins : null);
+        const gd = chron.map(r => r.rs_gd != null ? r.rs_gd : null);
+        const elimRank = chron.map(r => r.elim_rank != null ? r.elim_rank : null);
 
-        new Chart(document.getElementById('combinedLine'), {
+        // 1. MULTI-METRIC TREND CHART (Regular Season + Advanced + Playoff Outcomes)
+        // Dual y-axes: left for %, right for wins/rank
+        new Chart(document.getElementById('trendChart'), {
             type: 'line',
             data: {
                 labels: years,
                 datasets: [
-                    { label: 'Playoff Rank', data: ranks, borderColor: quaternary, backgroundColor: quaternary+'40', fill: true, tension: 0.1 },
-                    { label: 'Elim Order', data: orders, borderColor: quinary, backgroundColor: quinary+'40', fill: true, tension: 0.1 }
+                    {
+                        label: 'PTS%',
+                        data: ptsPct,
+                        borderColor: '#1a4a7a',
+                        backgroundColor: '#1a4a7a33',
+                        yAxisID: 'y',
+                        tension: 0.2,
+                        pointRadius: 3,
+                        borderWidth: 2,
+                        spanGaps: true
+                    },
+                    {
+                        label: 'xGF%',
+                        data: xgf,
+                        borderColor: '#4a2c7a',
+                        backgroundColor: '#4a2c7a33',
+                        yAxisID: 'y',
+                        tension: 0.2,
+                        pointRadius: 3,
+                        borderWidth: 2,
+                        spanGaps: true
+                    },
+                    {
+                        label: 'CF%',
+                        data: cf,
+                        borderColor: '#6b4e16',
+                        backgroundColor: '#6b4e1633',
+                        yAxisID: 'y',
+                        tension: 0.2,
+                        pointRadius: 2,
+                        borderWidth: 1.5,
+                        borderDash: [4, 2],
+                        spanGaps: true
+                    },
+                    {
+                        label: 'Playoff Wins',
+                        data: pWins,
+                        borderColor: quaternary,
+                        backgroundColor: quaternary + '55',
+                        yAxisID: 'y1',
+                        type: 'bar',
+                        borderWidth: 1,
+                        order: 10
+                    }
                 ]
             },
             options: {
-                scales: { y: { min: 0, max: 32 }, x: { title: { display: true, text: 'Year' } } },
-                plugins: { legend: { position: 'top' } }
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    title: { display: true, text: 'Regular Season Form · Process Metrics · Playoff Results', font: { size: 14 } },
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: (items) => {
+                                const i = items[0].dataIndex;
+                                const r = chron[i];
+                                return r ? `Elim Rank: ${r.elim_rank ?? '—'}  |  GD: ${r.rs_gd ?? '—'}` : '';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        position: 'left',
+                        title: { display: true, text: 'PTS% / xGF% / CF% (%)' },
+                        min: 30,
+                        max: 70,
+                        grid: { color: '#eee' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        position: 'right',
+                        title: { display: true, text: 'Playoff Wins' },
+                        min: 0,
+                        max: 16,
+                        grid: { drawOnChartArea: false }
+                    },
+                    x: { title: { display: true, text: 'Season' } }
+                }
             }
         });
+
+        // 2. SCATTER: Process (xGF%) vs Results (Playoff Wins) — colored by year era, size by PTS%
+        // Only modern seasons with advanced data
+        const scatterData = chron
+            .filter(r => r.xgf_pct != null && r.playoff_wins != null)
+            .map(r => ({
+                x: +Number(r.xgf_pct).toFixed(1),
+                y: r.playoff_wins,
+                year: r.year,
+                pts: r.rs_pts_pct != null ? +(r.rs_pts_pct * 100).toFixed(1) : 50,
+                r: Math.max(4, Math.min(14, (r.rs_pts_pct || 0.5) * 20))
+            }));
+
+        new Chart(document.getElementById('scatterChart'), {
+            type: 'bubble',
+            data: {
+                datasets: [{
+                    label: 'xGF% vs Playoff Wins (bubble size ∝ PTS%)',
+                    data: scatterData,
+                    backgroundColor: scatterData.map(d => d.year >= 2018 ? quaternary + 'cc' : (d.year >= 2008 ? quinary + 'aa' : '#88888888')),
+                    borderColor: scatterData.map(d => d.year >= 2018 ? quaternary : quinary),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Expected Goals Share vs Playoff Success (bubble ∝ Regular Season PTS%)', font: { size: 14 } },
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const d = ctx.raw;
+                                return `${d.year}: xGF% ${d.x} → ${d.y} wins  (PTS% ${d.pts})`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'xGF% (Expected Goals For %)' },
+                        min: 40,
+                        max: 60
+                    },
+                    y: {
+                        title: { display: true, text: 'Playoff Wins' },
+                        min: 0,
+                        max: 16,
+                        ticks: { stepSize: 2 }
+                    }
+                }
+            }
+        });
+
+        // 3. Playoff Wins Distribution (kept & enhanced) + overlay average advanced for context
+        const validWins = rows.filter(r => r.playoff_wins != null);
+        const maxW = 16;
+        const winsFreq = Array(maxW + 1).fill(0);
+        validWins.forEach(r => { if (r.playoff_wins >= 0 && r.playoff_wins <= maxW) winsFreq[r.playoff_wins]++; });
 
         new Chart(document.getElementById('playoffWinsHistogram'), {
             type: 'bar',
             data: {
-                labels: Array.from({length: maxW+1}, (_,i)=>i),
-                datasets: [{ label: 'Playoff Wins Freq', data: winsFreq, backgroundColor: quaternary+'90', borderColor: quaternary, borderWidth: 1 }]
+                labels: Array.from({length: maxW + 1}, (_, i) => i),
+                datasets: [{
+                    label: 'Seasons with N Playoff Wins',
+                    data: winsFreq,
+                    backgroundColor: quaternary + '90',
+                    borderColor: quaternary,
+                    borderWidth: 1
+                }]
             },
             options: {
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { title: { display: true, text: 'Playoff Wins' } } },
-                plugins: { legend: { display: false } }
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Playoff Wins Distribution (Team History)', font: { size: 14 } },
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            afterLabel: (ctx) => {
+                                const w = ctx.dataIndex;
+                                const subset = validWins.filter(r => r.playoff_wins === w && r.xgf_pct != null);
+                                if (subset.length === 0) return '';
+                                const avgX = (subset.reduce((s, r) => s + r.xgf_pct, 0) / subset.length).toFixed(1);
+                                const avgC = (subset.reduce((s, r) => s + (r.cf_pct || 0), 0) / subset.length).toFixed(1);
+                                return `Avg xGF% of these: ${avgX}  |  Avg CF%: ${avgC}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Frequency' } },
+                    x: { title: { display: true, text: 'Playoff Wins' } }
+                }
             }
         });
+
+        // 4. RADAR: Modern-era profile (last 5 seasons with advanced data, or overall modern average)
+        const modern = chron.filter(r => r.xgf_pct != null && r.year >= 2010);
+        const lastN = modern.slice(-5);
+        let radarLabels = ['PTS%', 'xGF%', 'CF%', 'FF%', 'Playoff Wins (scaled)', 'Goal Diff (scaled)'];
+        let radarValues = [50, 50, 50, 50, 5, 0];
+        if (lastN.length > 0) {
+            const avg = (arr, key) => {
+                const vals = arr.map(r => r[key]).filter(v => v != null);
+                return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+            };
+            const avgPts = avg(lastN, 'rs_pts_pct');
+            const avgX = avg(lastN, 'xgf_pct');
+            const avgC = avg(lastN, 'cf_pct');
+            const avgF = avg(lastN, 'ff_pct');
+            const avgW = avg(lastN, 'playoff_wins');
+            const avgGD = avg(lastN, 'rs_gd');
+            radarValues = [
+                avgPts != null ? +(avgPts * 100).toFixed(1) : 50,
+                avgX != null ? +avgX.toFixed(1) : 50,
+                avgC != null ? +avgC.toFixed(1) : 50,
+                avgF != null ? +avgF.toFixed(1) : 50,
+                avgW != null ? +(avgW * 100 / 16).toFixed(1) : 30, // scale 0-16 wins → 0-100
+                avgGD != null ? Math.max(0, Math.min(100, 50 + avgGD / 2)) : 50 // rough scale
+            ];
+        }
+
+        new Chart(document.getElementById('radarChart'), {
+            type: 'radar',
+            data: {
+                labels: radarLabels,
+                datasets: [{
+                    label: lastN.length ? `Last ${lastN.length} Advanced Seasons Avg` : 'Modern Era Profile',
+                    data: radarValues,
+                    backgroundColor: quaternary + '44',
+                    borderColor: quaternary,
+                    pointBackgroundColor: quaternary,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Modern Era Competitive Profile (scaled metrics)', font: { size: 14 } },
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    r: {
+                        min: 30,
+                        max: 70,
+                        ticks: { stepSize: 10 },
+                        pointLabels: { font: { size: 11 } }
+                    }
+                }
+            }
+        });
+
+        // ========== KEY INSIGHTS PANEL (SQL-powered analytics) ==========
+        const insightsEl = document.getElementById('insightsPanel');
+        if (insightsEl) {
+            // Compute useful aggregates via SQL + JS
+            const cupYears = rows.filter(r => r.playoff_wins === 16);
+            const deepRuns = rows.filter(r => r.playoff_wins >= 8); // Conf Finals+
+            const earlyExit = rows.filter(r => r.playoff_wins != null && r.playoff_wins <= 3);
+            const modernRows = rows.filter(r => r.xgf_pct != null);
+
+            const avg = (arr, key, scale=1) => {
+                const vals = arr.map(r => r[key]).filter(v => v != null && !isNaN(v));
+                return vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length * scale).toFixed(1) : '—';
+            };
+
+            // Simple Pearson-ish correlation (for xGF vs playoff_wins)
+            let corrXGF = 'n/a';
+            if (modernRows.length >= 5) {
+                const xs = modernRows.map(r => r.xgf_pct);
+                const ys = modernRows.map(r => r.playoff_wins || 0);
+                const n = xs.length;
+                const meanX = xs.reduce((a,b)=>a+b,0)/n;
+                const meanY = ys.reduce((a,b)=>a+b,0)/n;
+                let num=0, denX=0, denY=0;
+                for (let i=0;i<n;i++) {
+                    const dx = xs[i]-meanX, dy=ys[i]-meanY;
+                    num += dx*dy; denX += dx*dx; denY += dy*dy;
+                }
+                const r = denX && denY ? num / Math.sqrt(denX*denY) : 0;
+                corrXGF = r.toFixed(2);
+            }
+
+            const totalCups = cupYears.length;
+            const totalSeasons = rows.length;
+            const avgPtsCup = avg(cupYears, 'rs_pts_pct', 100);
+            const avgXGFCup = avg(cupYears.filter(r=>r.xgf_pct!=null), 'xgf_pct');
+            const avgXGFDeep = avg(deepRuns.filter(r=>r.xgf_pct!=null), 'xgf_pct');
+            const avgXGFEarly = avg(earlyExit.filter(r=>r.xgf_pct!=null), 'xgf_pct');
+
+            insightsEl.innerHTML = `
+                <div class="insight-card">
+                    <div class="insight-value">${totalCups}</div>
+                    <div class="insight-label">Stanley Cups</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-value">${avgPtsCup}%</div>
+                    <div class="insight-label">Avg PTS% in Cup Years</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-value">${avgXGFCup}</div>
+                    <div class="insight-label">Avg xGF% in Cup Years</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-value">${corrXGF}</div>
+                    <div class="insight-label">xGF% ↔ Playoff Wins (r)</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-value">${avgXGFDeep} / ${avgXGFEarly}</div>
+                    <div class="insight-label">xGF% Deep Run vs Early Exit</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-value">${modernRows.length}</div>
+                    <div class="insight-label">Seasons w/ Advanced Stats</div>
+                </div>
+            `;
+        }
     };
 
     document.querySelectorAll('.column-header .sortable').forEach(th => {
