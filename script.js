@@ -436,6 +436,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const gd = chron.map(r => r.rs_gd != null ? r.rs_gd : null);
         const elimRank = chron.map(r => r.elim_rank != null ? r.elim_rank : null);
 
+        // Dynamically compute left y-axis range from this team's PTS% min/max
+        // Round down/up to nearest 5 so the axis adapts cleanly for every team
+        const validPts = ptsPct.filter(v => v != null && !isNaN(v));
+        let yMin = 30;
+        let yMax = 75;
+        if (validPts.length > 0) {
+            const dataMin = Math.min(...validPts);
+            const dataMax = Math.max(...validPts);
+            yMin = Math.floor(dataMin / 5) * 5;
+            yMax = Math.ceil(dataMax / 5) * 5;
+            // Guard against degenerate range (single point or empty after rounding)
+            if (yMax <= yMin) {
+                yMin = Math.max(0, yMin - 5);
+                yMax = yMin + 20;
+            }
+        }
+
         // 1. MULTI-METRIC TREND CHART (Regular Season + Advanced + Playoff Outcomes)
         // Dual y-axes: left for %, right for wins/rank
         new Chart(document.getElementById('trendChart'), {
@@ -511,8 +528,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         type: 'linear',
                         position: 'left',
                         title: { display: true, text: 'PTS% / xGF% / CF% (%)' },
-                        min: 30,
-                        max: 75,
+                        min: yMin,
+                        max: yMax,
                         grid: { color: '#eee' }
                     },
                     y1: {
