@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 3. Try to load real team_advanced.csv
         let advLoaded = false;
-        const advFetch = await tryFetch('data/team_advanced.csv');
+        const advFetch = await tryFetch('data/advanced_stats.csv');
         if (advFetch) {
             try {
                 const text = await advFetch.response.text();
