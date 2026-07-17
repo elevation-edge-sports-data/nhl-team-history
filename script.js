@@ -650,7 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div class="insight-group context">
-                    <div class="insight-group-title">Overall Context</div>
+                    <div class="insight-group-title">Overall</div>
                     <div class="insight-group-cards">
                         <div class="insight-card">
                             <div class="insight-value">${appearances.length}</div>
@@ -658,11 +658,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="insight-card">
                             <div class="insight-value">${careerWins}</div>
-                            <div class="insight-label">Career Playoff Wins</div>
+                            <div class="insight-label">Playoff Wins</div>
                         </div>
                         <div class="insight-card">
                             <div class="insight-value">${corrXGF}</div>
-                            <div class="insight-label">xGF% ↔ Wins (r)</div>
+                            <div class="insight-label">xGF%–Wins Correlation</div>
                         </div>
                     </div>
                 </div>
