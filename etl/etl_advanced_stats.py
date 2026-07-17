@@ -8,6 +8,8 @@ from pathlib import Path
 SOURCE_CSV = "data/raw/advanced_stats_raw.csv"
 OUTPUT_PATH = Path("data/advanced_stats.csv")
 
+
+
 ABBR_MAP = {
     # Current teams (32)
     "ANA": "ANA",
@@ -15,16 +17,19 @@ ABBR_MAP = {
     "BOS": "BOS",
     "BUF": "BUF",
     "CAR": "CAR",
+    "CBJ": "CBJ",
     "CHI": "CHI",
+    "CGY": "CGY",
     "COL": "COL",
     "DAL": "DAL",
     "DET": "DET",
     "EDM": "EDM",
-    "FLO": "FLA",
+    "FLA": "FLA",
     "LAK": "LAK",
     "MIN": "MIN",
     "MTL": "MTL",
     "NJD": "NJD",
+    "NSH": "NSH",
     "NYI": "NYI",
     "NYR": "NYR",
     "OTT": "OTT",
@@ -35,12 +40,23 @@ ABBR_MAP = {
     "STL": "STL",
     "TBL": "TBL",
     "TOR": "TOR",
+    "UTA": "UTA",
     "VAN": "VAN",
+    "VGK": "VGK",
+    "WSH": "WSH",
+    "WPG": "WPG",
+
+
+    # Alternate spellings that appear in the raw data
+    "FLO": "FLA",
     "VEG": "VGK",
     "WAS": "WSH",
-    "WPG": "WPG",
     "CBS": "CBJ",
-    "UTA": "UTA",
+    "L.A": "LAK",
+    "T.B": "TBL",
+    "N.J": "NJD",
+    "S.J": "SJS",
+    "BJ":  "CBJ",
 
     # Historical teams (27)
     "ATL": "ATL",
@@ -70,6 +86,7 @@ ABBR_MAP = {
     "TSP": "TSP",
     "WIN": "WIN",
     "AFM": "AFM",
+
 }
 
 # ============================================================
