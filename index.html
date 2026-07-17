@@ -18,7 +18,7 @@
             <h2 id="teamName"></h2>
         </div>
 
-        <!-- KEY INSIGHTS STRIP (new) -->
+        <!-- KEY INSIGHTS – 2×2 groups -->
         <div id="insightsPanel" class="insights-panel"></div>
 
         <div class="table-area">
@@ -68,7 +68,6 @@
             </div>
         </div>
 
-        <!-- VISUALIZATIONS: 2x2 industry competitive grid -->
         <div class="charts-container">
             <div class="chart chart-wide">
                 <canvas id="trendChart"></canvas>
@@ -85,7 +84,6 @@
         </div>
     </div>
 
-    <!-- SQL Reference -->
     <div id="sqlShowcase">
         <h2>SQL Reference & Analytics Notes</h2>
         <p>This application loads playoff, regular season, and advanced metrics into an in-browser SQLite database.</p>
@@ -106,7 +104,7 @@ CREATE TABLE regular_season (
 CREATE TABLE team_advanced (
     season INTEGER, team_abbr TEXT,
     xgf_pct REAL, cf_pct REAL, ff_pct REAL
-);  </code></pre>
+);</code></pre>
         </details>
 
         <details>
@@ -128,11 +126,11 @@ ORDER BY year DESC;</code></pre>
         <details>
             <summary>Visualization design notes</summary>
             <ul>
-                <li><strong>Trend multi-axis</strong>: Shows how regular-season form and possession process (xGF%/CF%) co-move with playoff outcomes.</li>
-                <li><strong>Bubble scatter</strong>: Classic "are we good or lucky?" chart. Bubble size encodes PTS% so you immediately see whether high-xGF teams also dominated the standings.</li>
-                <li><strong>Distribution + conditional averages</strong>: Hover any bar to see average advanced metrics of seasons that reached that win total — instant cohort analysis.</li>
-                <li><strong>Radar profile</strong>: Compact multi-dimensional snapshot of recent competitive shape.</li>
-                <li><strong>SQL-first design</strong>: Normalized tables, analytical queries, and insights all run client-side with no backend.</li>
+                <li><strong>Trend multi-axis</strong>: Regular-season form and possession process (xGF%/CF%) co-move with playoff outcomes.</li>
+                <li><strong>Bubble scatter</strong>: xGF% vs Playoff Wins (bubble size = PTS%).</li>
+                <li><strong>Distribution</strong>: Playoff wins frequency with conditional averages.</li>
+                <li><strong>Radar profile</strong>: Modern-era competitive snapshot (scaled 0–100).</li>
+                <li><strong>Insights groups</strong>: Champions (elim_rank=1), Finalists (≤2), Deep Runs (≤4), Context (appearances + career wins + correlation).</li>
             </ul>
         </details>
     </div>
