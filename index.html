@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NHL Playoff Team Stats | Elevation Edge Sports Data</title>
-    <meta name="description" content="Interactive NHL team analytics: regular season, advanced possession metrics (xGF%, CF%, FF%), and Stanley Cup Playoff history powered by in-browser SQL.">
+    <meta name="description" content="Interactive NHL team analytics: regular season, advanced possession metrics (xGF%, CF%, FF%), and Stanley Cup Playoff history powered by in-browser SQL. Supports Team and Franchise modes (e.g. QUE → COL).">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -23,10 +23,23 @@
 
         <div class="table-area">
             <div class="selector-container">
-                <label for="teamSelector">Select Team:</label>
-                <select id="teamSelector" onchange="updateVisualization()">
-                    <option value="">Select a team</option>
-                </select>
+                <div class="selector-row">
+                    <label for="teamSelector" id="selectorLabel">Select Team:</label>
+                    <select id="teamSelector" onchange="updateVisualization()">
+                        <option value="">Select a team</option>
+                    </select>
+                </div>
+                <div class="mode-toggle" role="group" aria-label="View mode">
+                    <span class="mode-label">Mode:</span>
+                    <label class="mode-option">
+                        <input type="radio" name="viewMode" value="team" checked onchange="onModeChange()">
+                        Team
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="viewMode" value="franchise" onchange="onModeChange()">
+                        Franchise
+                    </label>
+                </div>
                 <span class="hint">Sort any column · All data joined via SQL</span>
             </div>
             <div class="table-container">
@@ -62,9 +75,10 @@
                 </table>
             </div>
             <div class="sql-info">
-                Powered by <strong>SQL</strong> (sql.js / SQLite) · 
+                Powered by <strong>SQL</strong> (sql.js / SQLite) ·
                 Schema: <code>playoff_results</code> + <code>regular_season</code> + <code>team_advanced</code> ·
-                Visualizations use full joined data (process metrics ↔ outcomes)
+                Visualizations use full joined data (process metrics ↔ outcomes) ·
+                <strong>Team</strong> or <strong>Franchise</strong> mode (e.g. QUE → COL)
             </div>
         </div>
 
@@ -86,7 +100,7 @@
 
     <div id="sqlShowcase">
         <h2>SQL Reference & Analytics Notes</h2>
-        <p>This application loads playoff, regular season, and advanced metrics into an in-browser SQLite database.</p>
+        <p>This application loads playoff, regular season, and advanced metrics into an in-browser SQLite database. Use <strong>Team</strong> mode for a single abbreviation or <strong>Franchise</strong> mode to link continuous histories (e.g. Quebec Nordiques → Colorado Avalanche).</p>
 
         <details open>
             <summary>Schema</summary>
@@ -109,7 +123,7 @@ CREATE TABLE team_advanced (
 
         <details>
             <summary>Wide view used by the table & charts</summary>
-            <pre><code>SELECT 
+            <pre><code>SELECT
     p.season AS year, p.team_abbr,
     r.gp AS rs_gp, r.w AS rs_w, r.l AS rs_l, r.otl AS rs_otl,
     r.pts AS rs_pts, r.pts_pct AS rs_pts_pct,
@@ -119,8 +133,18 @@ CREATE TABLE team_advanced (
 FROM playoff_results p
 LEFT JOIN regular_season r ON p.season = r.season AND p.team_abbr = r.team_abbr
 LEFT JOIN team_advanced a ON p.season = a.season AND p.team_abbr = a.team_abbr
-WHERE p.team_abbr = ?
+WHERE p.team_abbr = ?                    -- Team mode
+-- OR  WHERE p.team_abbr IN (?,?,…)      -- Franchise mode
 ORDER BY year DESC;</code></pre>
+        </details>
+
+        <details>
+            <summary>Franchise continuity (32 current teams)</summary>
+            <p><em>Policy: One entry per active NHL team. Predecessor abbreviations are included only when records continuously transfer. Utah is treated as expansion. MDA is not present in this dataset.</em></p>
+            <ul>
+                <li><strong>With history:</strong> CAR (ex-HFD), CGY (ex-AFM), COL (ex-QUE), DAL (ex-MNS), DET (ex-DCG/DFL), NJD (ex-KCS/CLR), TOR (ex-TAN/TSP), WPG (ex-ATL)</li>
+                <li><strong>Current identity only:</strong> ANA, BOS, BUF, CHI, CBJ, EDM, FLA, LAK, MIN, MTL, NSH, NYI, NYR, OTT, PHI, PIT, SJS, SEA, STL, TBL, UTA, VAN, VGK, WSH</li>
+            </ul>
         </details>
 
         <details>

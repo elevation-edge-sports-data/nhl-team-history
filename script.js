@@ -36,6 +36,178 @@ document.addEventListener('DOMContentLoaded', () => {
         'WPG': 'Winnipeg Jets', 'WSH': 'Washington Capitals'
     };
 
+    // ===== FRANCHISE CONTINUITY =====
+    // Policy:
+    //   • Exactly 32 entries — one per current active NHL team.
+    //   • Include predecessor abbreviations only when records continuously transfer.
+    //   • Utah is treated as expansion (NHL official position) — not linked to ARI/WIN.
+    //   • MDA is not present in this dataset; ANA is current-only.
+    // Label format (consistent): "ABB · Full Official Name"
+    // Keys sorted alphabetically by abbreviation.
+    const FRANCHISES = {
+        ANA: {
+            name: "Anaheim Ducks",
+            members: ["ANA"],
+            label: "ANA · Anaheim Ducks"
+        },
+        BOS: {
+            name: "Boston Bruins",
+            members: ["BOS"],
+            label: "BOS · Boston Bruins"
+        },
+        BUF: {
+            name: "Buffalo Sabres",
+            members: ["BUF"],
+            label: "BUF · Buffalo Sabres"
+        },
+        CAR: {
+            name: "Carolina Hurricanes",
+            members: ["HFD", "CAR"],
+            label: "CAR · Carolina Hurricanes"
+        },
+        CBJ: {
+            name: "Columbus Blue Jackets",
+            members: ["CBJ"],
+            label: "CBJ · Columbus Blue Jackets"
+        },
+        CGY: {
+            name: "Calgary Flames",
+            members: ["AFM", "CGY"],
+            label: "CGY · Calgary Flames"
+        },
+        CHI: {
+            name: "Chicago Blackhawks",
+            members: ["CHI"],
+            label: "CHI · Chicago Blackhawks"
+        },
+        COL: {
+            name: "Colorado Avalanche",
+            members: ["QUE", "COL"],
+            label: "COL · Colorado Avalanche"
+        },
+        DAL: {
+            name: "Dallas Stars",
+            members: ["MNS", "DAL"],
+            label: "DAL · Dallas Stars"
+        },
+        DET: {
+            name: "Detroit Red Wings",
+            members: ["DCG", "DFL", "DET"],
+            label: "DET · Detroit Red Wings"
+        },
+        EDM: {
+            name: "Edmonton Oilers",
+            members: ["EDM"],
+            label: "EDM · Edmonton Oilers"
+        },
+        FLA: {
+            name: "Florida Panthers",
+            members: ["FLA"],
+            label: "FLA · Florida Panthers"
+        },
+        LAK: {
+            name: "Los Angeles Kings",
+            members: ["LAK"],
+            label: "LAK · Los Angeles Kings"
+        },
+        MIN: {
+            name: "Minnesota Wild",
+            members: ["MIN"],
+            label: "MIN · Minnesota Wild"
+        },
+        MTL: {
+            name: "Montreal Canadiens",
+            members: ["MTL"],
+            label: "MTL · Montreal Canadiens"
+        },
+        NJD: {
+            name: "New Jersey Devils",
+            members: ["KCS", "CLR", "NJD"],
+            label: "NJD · New Jersey Devils"
+        },
+        NSH: {
+            name: "Nashville Predators",
+            members: ["NSH"],
+            label: "NSH · Nashville Predators"
+        },
+        NYI: {
+            name: "New York Islanders",
+            members: ["NYI"],
+            label: "NYI · New York Islanders"
+        },
+        NYR: {
+            name: "New York Rangers",
+            members: ["NYR"],
+            label: "NYR · New York Rangers"
+        },
+        OTT: {
+            name: "Ottawa Senators",
+            members: ["OTT"],
+            label: "OTT · Ottawa Senators"
+        },
+        PHI: {
+            name: "Philadelphia Flyers",
+            members: ["PHI"],
+            label: "PHI · Philadelphia Flyers"
+        },
+        PIT: {
+            name: "Pittsburgh Penguins",
+            members: ["PIT"],
+            label: "PIT · Pittsburgh Penguins"
+        },
+        SEA: {
+            name: "Seattle Kraken",
+            members: ["SEA"],
+            label: "SEA · Seattle Kraken"
+        },
+        SJS: {
+            name: "San Jose Sharks",
+            members: ["SJS"],
+            label: "SJS · San Jose Sharks"
+        },
+        STL: {
+            name: "St. Louis Blues",
+            members: ["STL"],
+            label: "STL · St. Louis Blues"
+        },
+        TBL: {
+            name: "Tampa Bay Lightning",
+            members: ["TBL"],
+            label: "TBL · Tampa Bay Lightning"
+        },
+        TOR: {
+            name: "Toronto Maple Leafs",
+            members: ["TAN", "TSP", "TOR"],
+            label: "TOR · Toronto Maple Leafs"
+        },
+        UTA: {
+            name: "Utah Mammoth",
+            members: ["UTA"],
+            label: "UTA · Utah Mammoth"
+        },
+        VAN: {
+            name: "Vancouver Canucks",
+            members: ["VAN"],
+            label: "VAN · Vancouver Canucks"
+        },
+        VGK: {
+            name: "Vegas Golden Knights",
+            members: ["VGK"],
+            label: "VGK · Vegas Golden Knights"
+        },
+        WPG: {
+            name: "Winnipeg Jets",
+            members: ["ATL", "WPG"],
+            label: "WPG · Winnipeg Jets"
+        },
+        WSH: {
+            name: "Washington Capitals",
+            members: ["WSH"],
+            label: "WSH · Washington Capitals"
+        }
+    };
+
+
     let data = {};
     let teamColors = {}, teamSecondaryColors = {}, teamTertiaryColors = {};
     let teamQuaternaryColors = {}, teamQuinaryColors = {};
@@ -204,6 +376,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
+    // Compute padded min/max from an array of numbers (nulls ignored)
+    function computeRange(values, { padding = 0.08, floor = null, ceil = null, minSpan = 8 } = {}) {
+        const nums = values.filter(v => v != null && !isNaN(v)).map(Number);
+        if (nums.length === 0) return { min: floor ?? 30, max: ceil ?? 75 };
+        let lo = Math.min(...nums);
+        let hi = Math.max(...nums);
+        const pad = Math.max((hi - lo) * padding, 2);
+        lo = lo - pad;
+        hi = hi + pad;
+        if (hi - lo < minSpan) {
+            const mid = (lo + hi) / 2;
+            lo = mid - minSpan / 2;
+            hi = mid + minSpan / 2;
+        }
+        if (floor != null) lo = Math.min(lo, floor);
+        if (ceil  != null) hi = Math.max(hi, ceil);
+        // Nice rounding
+        lo = Math.floor(lo);
+        hi = Math.ceil(hi);
+        return { min: lo, max: hi };
+    }
+
     // ===== LOAD =====
     tryFetch('NHLteamcolors.json')
         .then(r => r ? r.response.json() : [])
@@ -251,35 +446,77 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Failed to load core data files.');
         });
 
-    function populateTeamSelector() {
-        const teams = new Set();
-        Object.values(data).forEach(yearData => {
-            if (Array.isArray(yearData)) yearData.forEach(e => { if (e && e.team) teams.add(e.team); });
-        });
-        if (teams.size === 0) Object.keys(teamNames).forEach(t => teams.add(t));
+    function getViewMode() {
+        return document.querySelector('input[name="viewMode"]:checked')?.value || "team";
+    }
 
+    window.onModeChange = function () {
+        populateTeamSelector();
+        updateVisualization();
+    };
+
+    function populateTeamSelector() {
         const selector = document.getElementById('teamSelector');
+        const labelEl = document.getElementById('selectorLabel');
         if (!selector) return;
-        selector.innerHTML = '<option value="">Select a team</option>';
-        Array.from(teams).sort().forEach(team => {
-            const opt = document.createElement('option');
-            opt.value = team;
-            opt.textContent = team;
-            selector.appendChild(opt);
-        });
+
+        const mode = getViewMode();
+        const previous = selector.value;
+
+        selector.innerHTML = '';
+
+        if (mode === "franchise") {
+            if (labelEl) labelEl.textContent = "Select Franchise:";
+            Object.entries(FRANCHISES).forEach(([key, f]) => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = f.label;
+                selector.appendChild(opt);
+            });
+            // Prefer COL if available, else first franchise
+            if (FRANCHISES.COL) selector.value = "COL";
+            else if (selector.options.length) selector.selectedIndex = 0;
+        } else {
+            if (labelEl) labelEl.textContent = "Select Team:";
+            const teams = new Set();
+            Object.values(data).forEach(yearData => {
+                if (Array.isArray(yearData)) yearData.forEach(e => { if (e && e.team) teams.add(e.team); });
+            });
+            if (teams.size === 0) Object.keys(teamNames).forEach(t => teams.add(t));
+
+            const placeholder = document.createElement('option');
+            placeholder.value = "";
+            placeholder.textContent = "Select a team";
+            selector.appendChild(placeholder);
+
+            Array.from(teams).sort().forEach(team => {
+                const opt = document.createElement('option');
+                opt.value = team;
+                const full = teamNames[team] || team;
+                opt.textContent = `${team} · ${full}`;
+                selector.appendChild(opt);
+            });
+            selector.value = teams.has("COL") ? "COL" : "";
+        }
+
+        // Restore previous selection when switching modes if it still exists
+        if (previous && [...selector.options].some(o => o.value === previous)) {
+            selector.value = previous;
+        }
     }
 
     window.updateVisualization = function () {
-        const team = document.getElementById('teamSelector').value;
+        const selected = document.getElementById('teamSelector').value;
         const teamNameEl = document.getElementById('teamName');
         const teamAbbrEl = document.getElementById('teamAbbreviation');
         const logosEl = document.getElementById('teamLogos');
+        const mode = getViewMode();
 
         document.body.style.backgroundColor = defaultColors.c1;
         document.querySelector('h1.header').style.color = defaultColors.c2;
         document.querySelector('.team-header').style.color = defaultColors.c2;
 
-        if (!team) {
+        if (!selected) {
             teamNameEl.textContent = '';
             teamAbbrEl.textContent = '';
             logosEl.innerHTML = '';
@@ -291,21 +528,63 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        teamNameEl.textContent = teamNames[team] || team;
-        teamAbbrEl.textContent = team;
+        // Resolve Team vs Franchise
+        let abbrs, displayName, primaryAbbr, franchiseInfo = null;
+        if (mode === "franchise") {
+            franchiseInfo = FRANCHISES[selected];
+            if (!franchiseInfo) return;
+            abbrs = franchiseInfo.members;
+            displayName = franchiseInfo.name;
+            primaryAbbr = franchiseInfo.members[franchiseInfo.members.length - 1];
+        } else {
+            abbrs = [selected];
+            displayName = teamNames[selected] || selected;
+            primaryAbbr = selected;
+        }
+
+        // Header:
+        //   Left  (#teamAbbreviation): stacked abbreviations (current first, then predecessors)
+        //   Right (#teamName): current franchise name only
+        if (mode === "franchise") {
+            teamNameEl.textContent = franchiseInfo.name;
+            // Primary (current) first, then historical members
+            const ordered = [primaryAbbr, ...abbrs.filter(a => a !== primaryAbbr)];
+            teamAbbrEl.innerHTML = ordered
+                .map(a => `<div class="franchise-abbr">${a}</div>`)
+                .join("");
+        } else {
+            teamNameEl.textContent = displayName;
+            teamAbbrEl.textContent = primaryAbbr;
+        }
+
+        // Logos: collect unique years across all franchise members (or single team)
         logosEl.innerHTML = '';
-        (uniqueLogos[team] || []).map(y => parseInt(y)).sort((a,b)=>a-b).forEach(year => {
+        const logoYears = new Set();
+        abbrs.forEach(ab => {
+            (uniqueLogos[ab] || []).forEach(y => logoYears.add(parseInt(y)));
+        });
+        [...logoYears].sort((a, b) => a - b).forEach(year => {
             const img = document.createElement('img');
-            img.src = `${window.basePath || ''}logos/NHL${year}/${team}.png`;
             img.className = 'team-logo';
-            img.style.borderColor = teamTertiaryColors[team] || '#fff';
-            img.onerror = () => img.style.display = 'none';
+            img.style.borderColor = teamTertiaryColors[primaryAbbr] || '#fff';
+            // Try primary first, then other franchise members on 404
+            let tryIdx = 0;
+            const candidates = [primaryAbbr, ...abbrs.filter(a => a !== primaryAbbr)];
+            const tryLogo = () => {
+                if (tryIdx >= candidates.length) {
+                    img.style.display = 'none';
+                    return;
+                }
+                img.src = `${window.basePath || ''}logos/NHL${year}/${candidates[tryIdx++]}.png`;
+            };
+            img.onerror = tryLogo;
+            tryLogo();
             logosEl.appendChild(img);
         });
 
-        const primary    = (teamColors[team] && /^#[0-9A-F]{6}$/i.test(teamColors[team])) ? teamColors[team] : defaultColors.c1;
-        const secondary  = (teamSecondaryColors[team] && /^#[0-9A-F]{6}$/i.test(teamSecondaryColors[team])) ? teamSecondaryColors[team] : defaultColors.c2;
-        const quaternary = (teamQuaternaryColors[team] && /^#[0-9A-F]{6}$/i.test(teamQuaternaryColors[team])) ? teamQuaternaryColors[team] : defaultColors.c4;
+        const primary    = (teamColors[primaryAbbr] && /^#[0-9A-F]{6}$/i.test(teamColors[primaryAbbr])) ? teamColors[primaryAbbr] : defaultColors.c1;
+        const secondary  = (teamSecondaryColors[primaryAbbr] && /^#[0-9A-F]{6}$/i.test(teamSecondaryColors[primaryAbbr])) ? teamSecondaryColors[primaryAbbr] : defaultColors.c2;
+        const quaternary = (teamQuaternaryColors[primaryAbbr] && /^#[0-9A-F]{6}$/i.test(teamQuaternaryColors[primaryAbbr])) ? teamQuaternaryColors[primaryAbbr] : defaultColors.c4;
 
         document.body.style.backgroundColor = primary;
         document.querySelector('h1.header').style.color = secondary;
@@ -320,6 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const col = orderMap[sortColumn] || 'year';
         const dir = sortDirection === 'asc' ? 'ASC' : 'DESC';
 
+        const placeholders = abbrs.map(() => '?').join(',');
         const sql = `
             SELECT 
                 p.season AS year, p.team_abbr,
@@ -331,10 +611,10 @@ document.addEventListener('DOMContentLoaded', () => {
             FROM playoff_results p
             LEFT JOIN regular_season r ON p.season = r.season AND p.team_abbr = r.team_abbr
             LEFT JOIN team_advanced a ON p.season = a.season AND p.team_abbr = a.team_abbr
-            WHERE p.team_abbr = ?
+            WHERE p.team_abbr IN (${placeholders})
             ORDER BY ${col} ${dir}
         `;
-        const rows = runQuery(sql, [team]);
+        const rows = runQuery(sql, abbrs);
 
         // ===== TABLE =====
         const tbody = document.querySelector('#teamDataTable tbody');
@@ -345,7 +625,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         rows.forEach(r => {
             const tr = document.createElement('tr');
-            const logoSrc = `${window.basePath || ''}logos/NHL${r.year}/${team}.png`;
+            // Use the actual team_abbr for that season's logo (critical for franchise mode)
+            const logoAbbr = r.team_abbr || primaryAbbr;
+            const logoSrc = `${window.basePath || ''}logos/NHL${r.year}/${logoAbbr}.png`;
             tr.innerHTML = `
                 <td class="sticky-col"><img class="logo-img" src="${logoSrc}" onerror="this.style.display='none'"></td>
                 <td class="sticky-col">${r.year}</td>
@@ -386,6 +668,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const cf = chron.map(r => r.cf_pct != null ? +Number(r.cf_pct).toFixed(1) : null);
         const pWins = chron.map(r => r.playoff_wins != null ? r.playoff_wins : null);
 
+        // Adaptive Y range for PTS% / xGF% / CF%
+        const yRange = computeRange(
+            [...ptsPct, ...xgf, ...cf],
+            { padding: 0.10, minSpan: 12 }
+        );
+
         // Trend
         new Chart(document.getElementById('trendChart'), {
             type: 'bar',
@@ -402,8 +690,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 responsive: true, maintainAspectRatio: false,
                 plugins: { title: { display: true, text: 'Regular Season Form · Process Metrics · Playoff Results', font: { size: 14 } }, legend: { position: 'top' } },
                 scales: {
-                    y: { type: 'linear', position: 'left', title: { display: true, text: 'PTS% / xGF% / CF%' }, min: 30, max: 75 },
-                    y1: { type: 'linear', position: 'right', title: { display: true, text: 'Playoff Wins' }, min: 0, max: 16, grid: { drawOnChartArea: false } }
+                    y: {
+                        type: 'linear', position: 'left',
+                        title: { display: true, text: 'PTS% / xGF% / CF%' },
+                        min: yRange.min, max: yRange.max
+                    },
+                    y1: {
+                        type: 'linear', position: 'right',
+                        title: { display: true, text: 'Playoff Wins' },
+                        min: 0, max: Math.max(16, Math.ceil((Math.max(...pWins.filter(v=>v!=null), 0) || 0) + 1)),
+                        grid: { drawOnChartArea: false }
+                    }
                 }
             }
         });
@@ -414,6 +711,10 @@ document.addEventListener('DOMContentLoaded', () => {
             y: r.playoff_wins || 0,
             r: r.rs_pts_pct != null ? Math.max(4, r.rs_pts_pct * 40) : 6
         }));
+        const xRange = computeRange(
+            scatterData.map(d => d.x),
+            { padding: 0.12, minSpan: 8 }
+        );
         new Chart(document.getElementById('scatterChart'), {
             type: 'bubble',
             data: { datasets: [{ label: 'Season', data: scatterData, backgroundColor: quaternary + '88', borderColor: quaternary }] },
@@ -421,8 +722,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 responsive: true, maintainAspectRatio: false,
                 plugins: { title: { display: true, text: 'xGF% vs Playoff Wins (bubble = PTS%)', font: { size: 14 } }, legend: { display: false } },
                 scales: {
-                    x: { title: { display: true, text: 'xGF%' }, min: 40, max: 60 },
-                    y: { title: { display: true, text: 'Playoff Wins' }, min: 0, max: 16 }
+                    x: {
+                        title: { display: true, text: 'xGF%' },
+                        min: xRange.min, max: xRange.max
+                    },
+                    y: {
+                        title: { display: true, text: 'Playoff Wins' },
+                        min: 0,
+                        max: Math.max(16, Math.ceil((Math.max(...scatterData.map(d => d.y), 0) || 0) + 1))
+                    }
                 }
             }
         });
@@ -442,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { title: { display: true, text: 'Playoff Wins Distribution (Team History)', font: { size: 14 } }, legend: { display: false } },
+                plugins: { title: { display: true, text: (mode === 'franchise' ? 'Playoff Wins Distribution (Franchise History)' : 'Playoff Wins Distribution (Team History)'), font: { size: 14 } }, legend: { display: false } },
                 scales: { x: { title: { display: true, text: 'Playoff Wins' } }, y: { title: { display: true, text: 'Seasons' }, beginAtZero: true, ticks: { stepSize: 1 } } }
             }
         });
@@ -557,7 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const insightsEl = document.getElementById('insightsPanel');
         if (insightsEl) {
             let championsCount = rows.filter(r => r.elim_rank === 1).length;
-            if (team === 'MTL') championsCount = 23;   // hard-coded official NHL-era total
+            if (mode === 'team' && primaryAbbr === 'MTL') championsCount = 23;   // hard-coded official NHL-era total
 
             const realChampions = rows.filter(r => r.elim_rank === 1);
             const finalists     = rows.filter(r => r.elim_rank != null && r.elim_rank <= 2);
