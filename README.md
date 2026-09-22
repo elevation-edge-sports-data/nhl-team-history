@@ -1,6 +1,6 @@
 # NHL Playoff Team Stats
 
-**Live Demo:** [https://elevation-edge-sports-data.github.io/nhl-playoff-team-stats/](https://elevation-edge-sports-data.github.io/nhl-playoff-team-stats/)
+**Live Demo:** [https://elevation-edge-sports-data.github.io/nhl-team-history/](https://elevation-edge-sports-data.github.io/nhl-team-history/)
 
 Interactive historical NHL Stanley Cup Playoff statistics for every team, enhanced with regular season and advanced metrics joined via SQL.
 

@@ -217,8 +217,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let db = null;
 
     const defaultColors = { c1: '#111111', c2: '#A4A9AD', c3: '#A4A9AD', c4: '#111111', c5: '#A4A9AD' };
-    const isGitHubPages = window.location.hostname.includes('github.io');
-    const basePaths = isGitHubPages ? ['/nhl-playoff-team-stats/', '/', '/elevation-edge-sports-data/', '/docs/'] : [''];
+    // Files live next to this page. GitHub project pages are served from
+    // /<repo>/, and that prefix changes when the repository is renamed, so
+    // derive it from the current URL instead of a hardcoded repo name.
+    function siteBase() {
+        let path = window.location.pathname || '/';
+        const last = path.split('/').pop() || '';
+        if (!path.endsWith('/')) {
+            path = /\.[a-z0-9]+$/i.test(last) ? path.slice(0, path.length - last.length) : `${path}/`;
+        }
+        return path.endsWith('/') ? path : `${path}/`;
+    }
+    const basePaths = [siteBase(), './'];
 
     async function tryFetch(filePath, paths = basePaths) {
         for (const base of paths) {
